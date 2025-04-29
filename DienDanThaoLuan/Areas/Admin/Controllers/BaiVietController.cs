@@ -5,12 +5,16 @@ using System.Web;
 using System.Web.Mvc;
 using System.Xml;
 using DienDanThaoLuan.Controllers;
+using DienDanThaoLuan.Filters;
 using DienDanThaoLuan.Models;
+using Ganss.XSS;
 using PagedList;
 
 
 namespace DienDanThaoLuan.Areas.Admin.Controllers
 {
+    [SessionTimeout]
+    [Authorize]
     public class BaiVietController : Controller
     {
         DienDanThaoLuanEntities db = new DienDanThaoLuanEntities();
@@ -75,6 +79,7 @@ namespace DienDanThaoLuan.Areas.Admin.Controllers
             
             return PartialView(tttv);
         }
+        
         public ActionResult ChiTietBV(string id)
         {
             var ttbv = db.BaiViets.Where(bv => bv.MaBV == id).FirstOrDefault();
@@ -83,8 +88,15 @@ namespace DienDanThaoLuan.Areas.Admin.Controllers
             ViewBag.Code = codeContent;
             return View(ttbv);
         }
+        [ValidateInput(false)]
         public ActionResult LuuTTBai(string id, string trangthai, string lydo)
         {
+            lydo = XuLyNoiDung(lydo);
+            if (string.IsNullOrEmpty(lydo))
+            {
+                TempData["Error"] = "Vui lòng nhập đúng định dạng!";
+                return RedirectToAction ("ChiTietBV", new { id = id });
+            }
             var baiviet = db.BaiViets.Find(id);
             if (trangthai == "duyet")
             {
@@ -102,6 +114,17 @@ namespace DienDanThaoLuan.Areas.Admin.Controllers
             var maTV = db.BaiViets.Where(bv => bv.MaBV == id).Select(bv => bv.MaTV).FirstOrDefault();
             GuiThongBao("Bài viết", maTV, id, "BaiViet");
             return RedirectToAction("DuyetBai");
+        }
+        public static string XuLyNoiDung(string input)
+        {
+            if (string.IsNullOrWhiteSpace(input))
+                return input;
+
+            var sanitizer = new HtmlSanitizer();
+            sanitizer.AllowedTags.Clear(); // Không cho phép bất kỳ thẻ HTML nào
+            sanitizer.AllowedAttributes.Clear();
+
+            return sanitizer.Sanitize(input);
         }
         public void GuiThongBao(string loaitb, string maTVNhan, string maDoiTuong, string loaidt)
         {

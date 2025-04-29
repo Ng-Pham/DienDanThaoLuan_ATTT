@@ -14,15 +14,20 @@ using System.Data.SqlClient;
 using PagedList;
 using System.Web.UI;
 using HtmlAgilityPack;
+using DienDanThaoLuan.Filters;
+using System.Web.UI.WebControls;
+using Ganss.XSS;
 
 namespace DienDanThaoLuan.Controllers
 {
+    [SessionTimeout]
     public class DienDanThaoLuanController : Controller
     {
         // GET: DienDanThaoLuan
         DienDanThaoLuanEntities db = new DienDanThaoLuanEntities();
         public ActionResult Index()
         {
+            
             return View();
         }
         public ActionResult _PartialHeader()
@@ -208,18 +213,85 @@ namespace DienDanThaoLuan.Controllers
         }
         public string XuLyNoiDung(string noiDung, string codeContent)
         {
+            var sanitizer = new HtmlSanitizer();
+
+            // Xóa hết tag mặc định
+            sanitizer.AllowedTags.Clear();
+            sanitizer.AllowedAttributes.Clear();
+
+            // Cho phép một số tag an toàn
+            sanitizer.AllowedTags.Add("b");
+            sanitizer.AllowedTags.Add("i");
+            sanitizer.AllowedTags.Add("u");
+            sanitizer.AllowedTags.Add("strong");
+            sanitizer.AllowedTags.Add("em");
+            sanitizer.AllowedTags.Add("br");
+            sanitizer.AllowedTags.Add("p");
+            sanitizer.AllowedTags.Add("ul");
+            sanitizer.AllowedTags.Add("ol");
+            sanitizer.AllowedTags.Add("li");
+            sanitizer.AllowedTags.Add("a");
+            sanitizer.AllowedTags.Add("span");
+            sanitizer.AllowedTags.Add("code");
+            sanitizer.AllowedTags.Add("pre");
+            sanitizer.AllowedTags.Add("div");
+            sanitizer.AllowedTags.Add("section");
+            sanitizer.AllowedTags.Add("article");
+            sanitizer.AllowedTags.Add("header");
+            sanitizer.AllowedTags.Add("footer");
+            sanitizer.AllowedTags.Add("aside");
+
+            // Các thẻ inline formatting thêm
+            sanitizer.AllowedTags.Add("small");
+            sanitizer.AllowedTags.Add("mark");
+            sanitizer.AllowedTags.Add("del");
+            sanitizer.AllowedTags.Add("ins");
+            sanitizer.AllowedTags.Add("sub");
+            sanitizer.AllowedTags.Add("sup");
+
+            // Các thẻ tiêu đề
+            sanitizer.AllowedTags.Add("h1");
+            sanitizer.AllowedTags.Add("h2");
+            sanitizer.AllowedTags.Add("h3");
+            sanitizer.AllowedTags.Add("h4");
+            sanitizer.AllowedTags.Add("h5");
+            sanitizer.AllowedTags.Add("h6");
+            // Thẻ bảng cơ bản
+            sanitizer.AllowedTags.Add("table");
+            sanitizer.AllowedTags.Add("thead");
+            sanitizer.AllowedTags.Add("tbody");
+            sanitizer.AllowedTags.Add("tfoot");
+            sanitizer.AllowedTags.Add("tr");
+            sanitizer.AllowedTags.Add("th");
+            sanitizer.AllowedTags.Add("td");
+
+            // Các attribute thêm cho thẻ img, table
+            sanitizer.AllowedAttributes.Add("alt");
+            sanitizer.AllowedAttributes.Add("width");
+            sanitizer.AllowedAttributes.Add("height");
+            sanitizer.AllowedAttributes.Add("class");
+            sanitizer.AllowedAttributes.Add("id");
+            sanitizer.AllowedAttributes.Add("title");
+            sanitizer.AllowedAttributes.Add("target");
+
+            // Sanitize phần nội dung chính (không decode trước để tránh XSS)
+            string safeNoiDung = sanitizer.Sanitize(noiDung ?? string.Empty);
+            safeNoiDung = safeNoiDung.Replace("&nbsp;", " ");
+            // Sanitize codeContent trước khi đưa vào CDATA
+            //string safeCodeContent = sanitizer.Sanitize(codeContent ?? string.Empty);
+
             // Decode the content from the request
             var decodedCodeContent = codeContent ?? string.Empty; // Ensure not null
-            var decodedNoiDung = HttpUtility.UrlDecode(noiDung);
+            //var decodedNoiDung = HttpUtility.HtmlEncode(safeNoiDung);
 
             string xmlString;
             if (!string.IsNullOrEmpty(decodedCodeContent))
             {
-                xmlString = $"<NoiDung>{HttpUtility.HtmlDecode(decodedNoiDung)}<Code><![CDATA[{decodedCodeContent}]]></Code></NoiDung>";
+                xmlString = $"<NoiDung>{safeNoiDung}<Code><![CDATA[{decodedCodeContent}]]></Code></NoiDung>";
             }
             else
             {
-                xmlString = $"<NoiDung>{HttpUtility.HtmlDecode(decodedNoiDung)}</NoiDung>";
+                xmlString = $"<NoiDung>{safeNoiDung}</NoiDung>";
             }
 
             // Parse the XML string
@@ -363,7 +435,7 @@ namespace DienDanThaoLuan.Controllers
             ViewBag.MaCD = new SelectList(cd, "MaCD", "TenCD");
             return View();
         }
-
+        [Authorize]
         [HttpPost]
         [ValidateInput(false)]
         public ActionResult ThemBV(BaiViet post)
@@ -375,40 +447,44 @@ namespace DienDanThaoLuan.Controllers
                 {
                     
                     var nd = XuLyNoiDung(post.NoiDung, Request.Unvalidated.Form["CodeContent"]); // Store as string in database
-                                                          // Tạo mã bài viết tự động
-                    var lastPost = db.BaiViets.OrderByDescending(b => b.MaBV).FirstOrDefault();
-                    string newMaBV = "BV" + (Convert.ToInt32(lastPost.MaBV.Substring(2)) + 1).ToString("D3");
-
-                    post.MaBV = newMaBV; 
-                    post.NgayDang = DateTime.Now; 
-                    if( userId != null)
-                    { 
-                        post.TrangThai = "Chờ duyệt";
-                        post.MaTV = userId;
-                    }
-                    else
+                    if (nd != "<NoiDung></NoiDung>")
                     {
-                        var adId = Session["AdminId"] as string;
-                        post.TrangThai = "Đã duyệt";
-                        post.MaQTV = adId;
-                    } 
-                    post.NoiDung = nd;
+                        // Tạo mã bài viết tự động
+                        var lastPost = db.BaiViets.OrderByDescending(b => b.MaBV).FirstOrDefault();
+                        string newMaBV = "BV" + (Convert.ToInt32(lastPost.MaBV.Substring(2)) + 1).ToString("D3");
 
-                    db.BaiViets.Add(post);
-                    db.SaveChanges();
+                        post.MaBV = newMaBV;
+                        post.NgayDang = DateTime.Now;
+                        if (userId != null)
+                        {
+                            post.TrangThai = "Chờ duyệt";
+                            post.MaTV = userId;
+                        }
+                        else
+                        {
+                            var adId = Session["AdminId"] as string;
+                            post.TrangThai = "Đã duyệt";
+                            post.MaQTV = adId;
+                        }
+                        post.NoiDung = nd;
 
-                    TempData["SuccessMessage"] = "Bài viết đã được gửi chờ xét duyệt thành công!";
+                        db.BaiViets.Add(post);
+                        db.SaveChanges();
 
-                    // Quay lại trang trước đó (nếu có)
-                    if (Request.UrlReferrer != null)
-                    {
-                        return Redirect(Request.UrlReferrer.ToString());
+                        TempData["SuccessMessage"] = "Bài viết đã được gửi chờ xét duyệt thành công!";
+
+                        // Quay lại trang trước đó (nếu có)
+                        if (Request.UrlReferrer != null)
+                        {
+                            return Redirect(Request.UrlReferrer.ToString());
+                        }
+                        else
+                        {
+                            // Nếu không có trang trước, chuyển hướng đến Index hoặc một trang mặc định
+                            return RedirectToAction("Index");
+                        }
                     }
-                    else
-                    {
-                        // Nếu không có trang trước, chuyển hướng đến Index hoặc một trang mặc định
-                        return RedirectToAction("Index");
-                    }
+                    ViewBag.Loi = "Có lỗi xảy ra trong quá trình lưu bài viết";
                 }
                 catch (Exception ex)
                 {
@@ -428,10 +504,29 @@ namespace DienDanThaoLuan.Controllers
         {
             if (file != null && file.ContentLength > 0)
             {
-                var fileName = Path.GetFileName(file.FileName);
-                var path = Path.Combine(Server.MapPath("~/Upload_images/"), fileName);
+                // Chỉ cho phép 1 số định dạng file an toàn (ví dụ: hình ảnh)
+                var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".bmp" };
+                var fileExtension = Path.GetExtension(file.FileName).ToLower();
+
+                if (!allowedExtensions.Contains(fileExtension))
+                {
+                    return Json(new { error = "Định dạng file không được phép." });
+                }
+
+                // Đổi tên file thành tên mới tránh bị XSS/đụng độ tên
+                var safeFileName = Guid.NewGuid().ToString() + fileExtension;
+
+                // Kiểm tra thêm kích thước file nếu muốn (ví dụ tối đa 5MB)
+                const int maxFileSize = 5 * 1024 * 1024; // 5 MB
+                if (file.ContentLength > maxFileSize)
+                {
+                    return Json(new { error = "Kích thước file vượt quá giới hạn cho phép." });
+                }
+
+                var path = Path.Combine(Server.MapPath("~/Upload_images/"), safeFileName);
                 file.SaveAs(path);
-                return Json(new { location = Url.Content("~/Upload_images/" + fileName) });
+
+                return Json(new { location = Url.Content("~/Upload_images/" + safeFileName) });
             }
             return Json(new { error = "File upload failed." });
         }
@@ -587,46 +682,53 @@ namespace DienDanThaoLuan.Controllers
                 try
                 {
                     var nd = XuLyNoiDung(bl.NoiDung, Request.Unvalidated.Form["CodeContent"]); // Store as string in database
-                                                                                               // Tạo mã bài viết tự động
-                    var lastCmt = db.BinhLuans.OrderByDescending(c => c.MaBL).FirstOrDefault();
-                    string newMaBL = "BL" + (Convert.ToInt32(lastCmt.MaBL.Substring(2)) + 1).ToString("D3");
+                    if (nd != "<NoiDung></NoiDung>")
+                    {// Tạo mã bài viết tự động
+                        var lastCmt = db.BinhLuans.OrderByDescending(c => c.MaBL).FirstOrDefault();
+                        string newMaBL = "BL" + (Convert.ToInt32(lastCmt.MaBL.Substring(2)) + 1).ToString("D3");
 
-                    bl.MaBL = newMaBL; 
-                    bl.NgayGui = DateTime.Now; 
-                    bl.TrangThai = "Hiển thị"; 
-                    if (userId != null)
-                    {
-                        bl.MaTV = userId;
+                        bl.MaBL = newMaBL;
+                        bl.NgayGui = DateTime.Now;
+                        bl.TrangThai = "Hiển thị";
+                        if (userId != null)
+                        {
+                            bl.MaTV = userId;
+                        }
+                        else
+                        {
+                            var adId = Session["AdminId"] as string;
+                            bl.MaQTV = adId;
+                        }
+                        bl.NoiDung = nd;
+                        if (string.IsNullOrEmpty(bl.IDCha))
+                        {
+                            bl.IDCha = null;
+                        }
+                        else
+                        {
+                            bl.IDCha = bl.IDCha;
+                        }
+                        bl.MaBV = bl.MaBV;
+
+                        db.BinhLuans.Add(bl);
+                        db.SaveChanges();
+
+                        var maNgVietBai = db.BaiViets.Where(bv => bv.MaBV == bl.MaBV).Select(bv => bv.MaTV).FirstOrDefault();
+                        if (maNgVietBai != null)
+                        {
+                            GuiThongBao("Bình luận", maNgVietBai, bl.MaBL, "BinhLuan");
+                        }
+                        else
+                        {
+                            maNgVietBai = db.BaiViets.Where(bv => bv.MaBV == bl.MaBV).Select(bv => bv.MaQTV).FirstOrDefault();
+                            GuiThongBao("Bình luận", maNgVietBai, bl.MaBL, "BinhLuan");
+                        }
                     }
                     else
                     {
-                        var adId = Session["AdminId"] as string;
-                        bl.MaQTV = adId;
-                    }
-                    bl.NoiDung = nd;
-                    if (string.IsNullOrEmpty(bl.IDCha))
-                    {
-                        bl.IDCha = null;
-                    }
-                    else
-                    {
-                        bl.IDCha = bl.IDCha;
-                    }
-                    bl.MaBV = bl.MaBV;
-
-                    db.BinhLuans.Add(bl);
-                    db.SaveChanges();
-
-                    var maNgVietBai = db.BaiViets.Where(bv => bv.MaBV == bl.MaBV).Select(bv => bv.MaTV).FirstOrDefault();
-                    if (maNgVietBai != null)
-                    {
-                        GuiThongBao("Bình luận", maNgVietBai, bl.MaBL, "BinhLuan");
-                    }
-                    else
-                    {
-                        maNgVietBai = db.BaiViets.Where(bv => bv.MaBV == bl.MaBV).Select(bv => bv.MaQTV).FirstOrDefault();
-                        GuiThongBao("Bình luận", maNgVietBai, bl.MaBL, "BinhLuan");
-                    }
+                        TempData["Loi"] = "Vui lòng nhập đúng định dạng!";
+                        return RedirectToAction("NDBaiViet", new { id = bl.MaBV });
+                    }    
                 }
                 catch (Exception ex)
                 {
@@ -704,21 +806,29 @@ namespace DienDanThaoLuan.Controllers
             return View();
         }
         [HttpPost]
+        [ValidateInput(false)]
         public ActionResult GopY(GopY gopY)
         {
             var userId = Session["UserId"] as string;
             if (ModelState.IsValid && !string.IsNullOrEmpty(gopY.NoiDung))
             {
                 var nd = XuLyNoiDung(gopY.NoiDung, null);
+                if (nd != "<NoiDung></NoiDung>")
+                {
+                    gopY.NoiDung = nd;
+                    gopY.NgayGui = DateTime.Now;
+                    gopY.MaTV = userId;
+                    gopY.TrangThai = false;
 
-                gopY.NoiDung = nd;
-                gopY.NgayGui = DateTime.Now;
-                gopY.MaTV = userId;
-                gopY.TrangThai = false;
-
-                db.Gopies.Add(gopY);
-                db.SaveChanges();
-                ViewBag.ThongBao = "Đã gửi góp ý! Cảm ơn bạn đã gửi góp ý!";
+                    db.Gopies.Add(gopY);
+                    db.SaveChanges();
+                    ViewBag.ThongBao = "Đã gửi góp ý! Cảm ơn bạn đã gửi góp ý!";
+                }
+                else
+                {
+                    ViewBag.Loi = "Vui lòng nhập nội dung góp ý hợp lệ!";
+                    return View();
+                }
             }
             else
             {
@@ -726,6 +836,7 @@ namespace DienDanThaoLuan.Controllers
             }    
             return View();
         }
+        [Authorize]
         public ActionResult ChinhSuaBV(string id)
         {
             var bv = db.BaiViets.Where(b => b.MaBV == id).SingleOrDefault();
@@ -740,6 +851,7 @@ namespace DienDanThaoLuan.Controllers
             { return RedirectToAction("ThongBao"); }
             
         }
+        [Authorize]
         [ValidateInput(false)]
         public ActionResult CapNhapBV(BaiViet post)
         {
@@ -747,9 +859,17 @@ namespace DienDanThaoLuan.Controllers
             if (!string.IsNullOrEmpty(post.NoiDung))
             {
                 var nd = XuLyNoiDung(post.NoiDung, Request.Unvalidated.Form["CodeContent"]);
-                bv.NoiDung = nd;
-                bv.TrangThai = "Chờ duyệt";
-                db.SaveChanges();
+                if (nd != "<NoiDung></NoiDung>")
+                {
+                    bv.NoiDung = nd;
+                    bv.TrangThai = "Chờ duyệt";
+                    db.SaveChanges();
+                }
+                else
+                {
+                    ViewBag.Loi = "Có lỗi xảy ra trong quá trình lưu. Vui lòng nhập đúng định dạng!";
+                    return View();
+                }
             }
             else 
             {
@@ -849,7 +969,7 @@ namespace DienDanThaoLuan.Controllers
             db.SaveChanges();
             return RedirectToAction("ThongBao");
         }
-
+        [Authorize]
         public ActionResult BaiVietCuaToi(int? page)
         {
             // Lấy UserID từ Session
@@ -922,7 +1042,7 @@ namespace DienDanThaoLuan.Controllers
                 }
             }
         }
-
+        [Authorize]
         public ActionResult ThongTin(int? page, string id)
         {
             var thongTinTV = db.ThanhViens.SingleOrDefault(tt => tt.MaTV == id);

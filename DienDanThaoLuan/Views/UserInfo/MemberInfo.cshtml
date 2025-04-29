@@ -173,6 +173,22 @@
         border: 2px solid #fff;
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
+
+    #password-strength-container {
+        transform: scaleY(0);
+        transform-origin: top;
+        transition: transform 0.3s ease;
+        height: 8px; /* Giữ đúng chiều cao progress bar */
+        overflow: hidden;
+    }
+
+        #password-strength-container.show {
+            transform: scaleY(1);
+        }
+
+    #password-strength-bar {
+        transition: width 0.3s ease, background-color 0.3s ease;
+    }
 </style>
 
 <div class="cover-container">
@@ -299,8 +315,11 @@
 
                         <div class="mb-3">
                             <label for="newPassword" class="form-label" style="margin-bottom: 1rem">Mật khẩu mới</label>
-                            <input type="password" name="newPassword" class="form-control" required>
+                            <input type="password" id="password-field"  name="newPassword" class="form-control" required>
                             <div class="invalid-feedback">Vui lòng nhập mật khẩu mới.</div>
+                            <div id="password-strength-container" class="progress mt-sm-1">
+                                <div id="password-strength-bar" class="progress-bar bg-danger" role="progressbar" style="width: 0%"></div>
+                            </div>
                         </div>
 
                         <div class="mb-3">
@@ -309,7 +328,7 @@
                             <div class="invalid-feedback">Vui lòng xác nhận mật khẩu mới.</div>
                         </div>
 
-                        <button type="submit" class="btn btn-primary">Đổi mật khẩu</button>
+                        <button type="submit" class="btn btn-primary" id="submit-button" disabled>Đổi mật khẩu</button>
                     }
                 </div>
             </div>
@@ -379,4 +398,79 @@
             document.getElementById('coverForm').submit();
         }
     }
+</script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const passwordField = document.getElementById('password-field');
+        const strengthContainer = document.getElementById('password-strength-container');
+        const strengthBar = document.getElementById('password-strength-bar');
+        const submitButton = document.getElementById('submit-button');
+
+        passwordField.addEventListener('input', function () {
+            const password = passwordField.value;
+
+            // Nếu người dùng có nhập, hiện progress
+
+            if (password.length > 0) {
+                strengthContainer.classList.add('show');
+            } else {
+                strengthContainer.classList.remove('show');
+                strengthBar.style.width = '0%';
+                strengthBar.className = 'progress-bar bg-danger';
+                updateSubmitButtonState(false); // Vô hiệu hóa nút đăng ký nếu mật khẩu không đủ mạnh
+                return;
+            }
+
+            // Tính độ mạnh
+            const lengthOK = password.length >= 8;
+            const hasLower = /[a-z]/.test(password);
+            const hasUpper = /[A-Z]/.test(password);
+            const hasNumber = /[0-9]/.test(password);
+            const hasSpecial = /[^a-zA-Z0-9]/.test(password);
+
+            let score = 0;
+            if (lengthOK) score++;
+            if (hasLower) score++;
+            if (hasUpper) score++;
+            if (hasNumber) score++;
+            if (hasSpecial) score++;
+
+            let color = "bg-danger";
+            let width = "20%";
+
+            if (score === 2) {
+                color = "bg-warning";
+                width = "40%";
+            } else if (score === 3) {
+                color = "bg-info";
+                width = "60%";
+            } else if (score === 4) {
+                color = "#007bff";
+                width = "80%";
+            } else if (score === 5) {
+                color = "bg-success";
+                width = "100%";
+            }
+
+            strengthBar.className = `progress-bar ${color}`;
+            strengthBar.style.width = width;
+
+            // Kiểm tra nếu mật khẩu đủ mạnh (từ 80% trở lên)
+            if (score >= 3) {
+                updateSubmitButtonState(true); // Cho phép nút đăng ký khi mật khẩu đủ mạnh
+            } else {
+                updateSubmitButtonState(false); // Vô hiệu hóa nút đăng ký nếu mật khẩu yếu
+            }
+        });
+        // Cập nhật trạng thái nút đăng ký
+        function updateSubmitButtonState(enabled) {
+            if (enabled) {
+                submitButton.disabled = false;
+                submitButton.style.cursor = 'pointer'; // Thêm kiểu con trỏ để rõ ràng
+            } else {
+                submitButton.disabled = true;
+                submitButton.style.cursor = 'not-allowed'; // Thêm kiểu con trỏ khi vô hiệu hóa
+            }
+        }
+    });
 </script>

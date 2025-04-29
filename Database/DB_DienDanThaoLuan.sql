@@ -99,6 +99,15 @@ CREATE TABLE ThongBao
 	TrangThai BIT
 )
 
+-- Thêm cột FailedLoginAttempts, LastFailedLogin và LockoutUntil
+ALTER TABLE ThanhVien ADD FailedLoginAttempts INT DEFAULT 0;
+ALTER TABLE ThanhVien ADD LastFailedLogin DATETIME NULL;
+ALTER TABLE ThanhVien ADD LockoutUntil DATETIME NULL;
+
+ALTER TABLE QuanTriVien ADD FailedLoginAttempts INT DEFAULT 0;
+ALTER TABLE QuanTriVien ADD LastFailedLogin DATETIME NULL;
+ALTER TABLE QuanTriVien ADD LockoutUntil DATETIME NULL;
+
 -- Dữ liệu cho bảng QuanTriVien
 INSERT INTO QuanTriVien (MaQTV, HoTen, AnhDaiDien, AnhBia, Email, GioiTinh, SDT, NgaySinh, TenDangNhap, MatKhau) VALUES
 --pass chung ad123456
@@ -232,3 +241,13 @@ VALUES
 ('TB002', N'<NoiDung>Có bình luận mới trên bài viết của bạn</NoiDung>', '2024-10-02 12:00:00', N'Bình luận', 'TV002', NULL, 'BL002', N'BinhLuan', 0),
 ('TB003', N'<NoiDung>Chúc mừng năm mới 2024</NoiDung>', '2024-10-02 13:00:00', N'Thông báo hệ thống', NULL, NULL, NULL, NULL, 0),
 ('TB004', N'<NoiDung>Chào mừng đến tới IT Xperience</NoiDung>', '2024-11-01 09:00:00', N'Thông báo hệ thống', NULL, NULL, NULL, NULL, 1);
+
+
+-- Thêm cột FailedLoginAttempts, LastFailedLogin và LockoutUntil
+ALTER TABLE ThanhVien ADD FailedLoginAttempts INT DEFAULT 0;
+ALTER TABLE ThanhVien ADD LastFailedLogin DATETIME NULL;
+ALTER TABLE ThanhVien ADD LockoutUntil DATETIME NULL;
+
+ALTER TABLE QuanTriVien ADD FailedLoginAttempts INT DEFAULT 0;
+ALTER TABLE QuanTriVien ADD LastFailedLogin DATETIME NULL;
+ALTER TABLE QuanTriVien ADD LockoutUntil DATETIME NULL;

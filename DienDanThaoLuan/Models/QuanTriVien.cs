@@ -32,6 +32,9 @@ namespace DienDanThaoLuan.Models
         public string MatKhau { get; set; }
         public string GioiTinh { get; set; }
         public string AnhBia { get; set; }
+        public Nullable<int> FailedLoginAttempts { get; set; }
+        public Nullable<System.DateTime> LastFailedLogin { get; set; }
+        public Nullable<System.DateTime> LockoutUntil { get; set; }
     
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<BaiViet> BaiViets { get; set; }
