@@ -1,4 +1,5 @@
-﻿using DienDanThaoLuan.Models;
+﻿using DienDanThaoLuan.Filters;
+using DienDanThaoLuan.Models;
 using PagedList;
 using System;
 using System.Collections.Generic;
@@ -9,6 +10,8 @@ using System.Web.UI;
 
 namespace DienDanThaoLuan.Areas.Admin.Controllers
 {
+    [SessionTimeout]
+    [Authorize]
     public class ThongBaoTongController : Controller
     {
         DienDanThaoLuanEntities db = new DienDanThaoLuanEntities();

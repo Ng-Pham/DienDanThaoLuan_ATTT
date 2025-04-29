@@ -34,6 +34,9 @@ namespace DienDanThaoLuan.Models
         public string TenDangNhap { get; set; }
         public string MatKhau { get; set; }
         public string AnhBia { get; set; }
+        public Nullable<int> FailedLoginAttempts { get; set; }
+        public Nullable<System.DateTime> LastFailedLogin { get; set; }
+        public Nullable<System.DateTime> LockoutUntil { get; set; }
     
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<BaiViet> BaiViets { get; set; }
@@ -43,6 +46,7 @@ namespace DienDanThaoLuan.Models
         public virtual ICollection<GopY> Gopies { get; set; }
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<ThongBao> ThongBaos { get; set; }
+
         public DateTime? LastPasswordResetRequest { get; set; }
     }
 }

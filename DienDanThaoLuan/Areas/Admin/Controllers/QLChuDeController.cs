@@ -5,9 +5,12 @@ using System.Linq;
 using System.Web;
 using System.Web.Mvc;
 using PagedList;
+using DienDanThaoLuan.Filters;
 
 namespace DienDanThaoLuan.Areas.Admin.Controllers
 {
+    [SessionTimeout]
+    [Authorize]
     public class QLChuDeController : Controller
     {
         DienDanThaoLuanEntities db = new DienDanThaoLuanEntities();

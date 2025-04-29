@@ -5,6 +5,7 @@ using System.Linq;
 using System.Web;
 using System.Web.Mvc;
 using DienDanThaoLuan.Models;
+using Ganss.XSS;
 using Microsoft.Ajax.Utilities;
 
 namespace DienDanThaoLuan.Controllers
@@ -33,11 +34,21 @@ namespace DienDanThaoLuan.Controllers
         }
         [Authorize]
         [HttpPost]
+        [ValidateInput(false)]
         public ActionResult UpdateMember(ThanhVien model)
         {
             if (ModelState.IsValid)
             {
                 var member = db.ThanhViens.Find(model.MaTV);
+                // Anti-XSS các trường nhập vào
+                model.HoTen = XuLyNoiDung(model.HoTen);
+                model.Email = XuLyNoiDung(model.Email);
+                model.SDT = XuLyNoiDung(model.SDT);
+                if (string.IsNullOrEmpty(model.HoTen) || string.IsNullOrEmpty(model.Email) || string.IsNullOrEmpty(model.SDT))
+                {
+                    TempData["ErrorMessage"] = "Vui lòng nhập thông tin hợp lệ!";
+                    return RedirectToAction("Index");
+                }
                 if (member.Email != model.Email)
                 {
                     var existingEmail = db.ThanhViens.Where(m => m.Email == model.Email).FirstOrDefault();
@@ -49,7 +60,7 @@ namespace DienDanThaoLuan.Controllers
                 }
                 if (member.HoTen == model.HoTen && member.Email == model.Email && member.GioiTinh == model.GioiTinh && member.SDT == model.SDT && member.NgaySinh == model.NgaySinh)
                 {
-                    TempData["SuccessMessage"] = "Không có thông tin nào thay đổi!";
+                    TempData["ErrorMessage"] = "Không có thông tin nào thay đổi!";
                     return RedirectToAction("Index");
                 }
                 if (member != null)
@@ -66,14 +77,34 @@ namespace DienDanThaoLuan.Controllers
             }
             return RedirectToAction("Index");
         }
+        public static string XuLyNoiDung(string input)
+        {
+            if (string.IsNullOrWhiteSpace(input))
+                return input;
 
+            var sanitizer = new HtmlSanitizer();
+            sanitizer.AllowedTags.Clear(); // Không cho phép bất kỳ thẻ HTML nào
+            sanitizer.AllowedAttributes.Clear();
+
+            return sanitizer.Sanitize(input);
+        }
         [Authorize]
         [HttpPost]
+        [ValidateInput(false)]
         public ActionResult UpdateAdmin(QuanTriVien model)
         {
             if (ModelState.IsValid)
             {
                 var admin = db.QuanTriViens.Find(model.MaQTV);
+                // Anti-XSS các trường nhập vào
+                model.HoTen = XuLyNoiDung(model.HoTen);
+                model.Email = XuLyNoiDung(model.Email);
+                model.SDT = XuLyNoiDung(model.SDT);
+                if (string.IsNullOrEmpty(model.HoTen)|| string.IsNullOrEmpty(model.Email) || string.IsNullOrEmpty(model.SDT))
+                {
+                    TempData["ErrorMessage"] = "Vui lòng nhập thông tin hợp lệ!";
+                    return RedirectToAction("Index");
+                }
                 if (admin.Email != model.Email)
                 {
                     var existingEmail = db.QuanTriViens.Where(m => m.Email == model.Email).FirstOrDefault();
@@ -103,11 +134,18 @@ namespace DienDanThaoLuan.Controllers
 
         [Authorize]
         [HttpPost]
+        [ValidateInput(false)]
         public ActionResult ChangePassword(string currentPassword, string newPassword, string confirmPassword)
         {
             string username = User.Identity.Name;
             var member = db.ThanhViens.SingleOrDefault(m => m.TenDangNhap.ToLower() == username.ToLower());
-
+            // Anti-XSS các trường nhập vào
+            newPassword = XuLyNoiDung(newPassword);
+            if (string.IsNullOrEmpty(newPassword))
+            {
+                TempData["ErrorMessage"] = "Vui lòng nhập mật khẩu mới hợp lệ!";
+                return RedirectToAction("Index");
+            }    
             if (member == null)
             {
                 var admin = db.QuanTriViens.SingleOrDefault(a => a.TenDangNhap.ToLower() == username.ToLower());
