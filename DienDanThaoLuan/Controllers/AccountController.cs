@@ -252,8 +252,6 @@ namespace DienDanThaoLuan.Controllers
                         tv.AnhDaiDien = "avatar.jpg";
                         tv.MatKhau = BCrypt.Net.BCrypt.HashPassword(tv.MatKhau);
                         tv.FailedLoginAttempts = 0;
-                        tv.LastFailedLogin = null;
-                        tv.LockoutUntil = null;
 
                         // Thêm thành viên mới vào database
                         db.ThanhViens.Add(tv);
