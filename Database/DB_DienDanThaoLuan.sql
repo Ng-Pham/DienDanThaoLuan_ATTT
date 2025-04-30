@@ -98,6 +98,13 @@ CREATE TABLE ThongBao
 	LoaiDoiTuong VARCHAR(50),
 	TrangThai BIT
 )
+--Update độ dài ký tự thuộc tính email
+ALTER TABLE ThanhVien
+ALTER COLUMN Email NVARCHAR(50) NOT NULL;
+
+ALTER TABLE QuanTriVien
+ALTER COLUMN Email NVARCHAR(50) NOT NULL;
+
 
 -- Thêm cột FailedLoginAttempts, LastFailedLogin và LockoutUntil
 ALTER TABLE ThanhVien ADD FailedLoginAttempts INT DEFAULT 0;
