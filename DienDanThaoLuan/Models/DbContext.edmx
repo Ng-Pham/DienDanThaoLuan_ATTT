@@ -64,7 +64,7 @@
           <Property Name="HoTen" Type="nvarchar" MaxLength="80" />
           <Property Name="AnhDaiDien" Type="varchar" MaxLength="50" />
           <Property Name="AnhBia" Type="varchar" MaxLength="50" />
-          <Property Name="Email" Type="varchar" MaxLength="30" />
+          <Property Name="Email" Type="nvarchar" MaxLength="50" Nullable="false" />
           <Property Name="GioiTinh" Type="nvarchar" MaxLength="3" />
           <Property Name="SDT" Type="varchar" MaxLength="11" />
           <Property Name="NgaySinh" Type="date" />
@@ -82,7 +82,7 @@
           <Property Name="HoTen" Type="nvarchar" MaxLength="80" />
           <Property Name="AnhDaiDien" Type="varchar" MaxLength="50" />
           <Property Name="AnhBia" Type="varchar" MaxLength="50" />
-          <Property Name="Email" Type="varchar" MaxLength="30" />
+          <Property Name="Email" Type="nvarchar" MaxLength="50" Nullable="false" />
           <Property Name="GioiTinh" Type="nvarchar" MaxLength="3" />
           <Property Name="SDT" Type="varchar" MaxLength="11" />
           <Property Name="NgaySinh" Type="date" />
@@ -350,7 +350,7 @@
           <Property Name="MaQTV" Type="String" MaxLength="15" FixedLength="false" Unicode="false" Nullable="false" />
           <Property Name="HoTen" Type="String" MaxLength="80" FixedLength="false" Unicode="true" />
           <Property Name="AnhDaiDien" Type="String" MaxLength="50" FixedLength="false" Unicode="false" />
-          <Property Name="Email" Type="String" MaxLength="30" FixedLength="false" Unicode="false" />
+          <Property Name="Email" Type="String" MaxLength="50" FixedLength="false" Unicode="true" Nullable="false" />
           <Property Name="SDT" Type="String" MaxLength="11" FixedLength="false" Unicode="false" />
           <Property Name="NgaySinh" Type="DateTime" Precision="0" />
           <Property Name="TenDangNhap" Type="String" MaxLength="15" FixedLength="false" Unicode="false" />
@@ -371,7 +371,7 @@
           <Property Name="MaTV" Type="String" MaxLength="15" FixedLength="false" Unicode="false" Nullable="false" />
           <Property Name="HoTen" Type="String" MaxLength="80" FixedLength="false" Unicode="true" />
           <Property Name="AnhDaiDien" Type="String" MaxLength="50" FixedLength="false" Unicode="false" />
-          <Property Name="Email" Type="String" MaxLength="30" FixedLength="false" Unicode="false" />
+          <Property Name="Email" Type="String" MaxLength="50" FixedLength="false" Unicode="true" Nullable="false" />
           <Property Name="GioiTinh" Type="String" MaxLength="3" FixedLength="false" Unicode="true" />
           <Property Name="SDT" Type="String" MaxLength="11" FixedLength="false" Unicode="false" />
           <Property Name="NgaySinh" Type="DateTime" Precision="0" />

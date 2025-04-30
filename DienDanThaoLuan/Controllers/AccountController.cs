@@ -213,38 +213,59 @@ namespace DienDanThaoLuan.Controllers
         {
             if (ModelState.IsValid)
             {
-                try
+                tv.TenDangNhap = XuLyNoiDung(tv.TenDangNhap);
+                tv.Email = XuLyNoiDung(tv.Email);
+                tv.MatKhau = XuLyNoiDung(tv.MatKhau);
+                tv.SDT = XuLyNoiDung(tv.SDT);
+                tv.HoTen = XuLyNoiDung(tv.HoTen);
+                if (string.IsNullOrEmpty(tv.Email) || string.IsNullOrEmpty(tv.TenDangNhap) || string.IsNullOrEmpty(tv.MatKhau) || string.IsNullOrEmpty(tv.SDT) || string.IsNullOrEmpty(tv.HoTen))
                 {
-                    var lastTV = db.ThanhViens.OrderByDescending(t => t.MaTV).FirstOrDefault();
-                    string newMaTV = "TV" + (Convert.ToInt32(lastTV.MaTV.Substring(2)) + 1).ToString("D3");
-                    // Kiểm tra xem tên đăng nhập đã tồn tại chưa
-                    var existingUser = db.ThanhViens.FirstOrDefault(x => x.TenDangNhap == tv.TenDangNhap);
-                    var existingEmail = db.ThanhViens.FirstOrDefault(x => x.Email == tv.Email);
-                    if (existingUser != null)
+
+                    ViewBag.error = "Có thông tin chứa ký tự không họp lệ. Vui lòng thử lại!";
+                    return View(tv);
+                }
+                else
+                {
+                    if (!IsPasswordStrongEnough(tv.MatKhau))
                     {
-                        ViewBag.error = "Tên đăng nhập đã tồn tại!! Vui lòng thử lại";
-                        ViewBag.tv.TenDangNhap = tv.TenDangNhap;
-                        return View(tv);
+                        ViewBag.error = "Mật khẩu phải có ít nhất 8 ký tự, bao gồm chữ hoa, chữ thường, số và ký tự đặc biệt.";
+                        return View();
                     }
-                    else if (existingEmail != null)
+                    try
                     {
-                        ViewBag.error = "Email đã được sử dụng!! Vui lòng thử lại";
-                        ViewBag.tv.Email = tv.Email;
-                        return View(tv);
-                    }
-                    else if(tv.MatKhau.Length < 8)
-                    {
-                        ViewBag.error = "Mật khẩu phải có độ dài ít nhất 8 ký tự";
-                        ViewBag.tv.TenDangNhap = tv.TenDangNhap;
-                        return View(tv);
-                    }
-                    tv.NgayThamGia = DateTime.Now;
-                    tv.MaTV = newMaTV;
-                    tv.AnhDaiDien = "avatar.jpg";
-                    tv.MatKhau = BCrypt.Net.BCrypt.HashPassword(tv.MatKhau);
-                    // Thêm thành viên mới vào database
-                    db.ThanhViens.Add(tv);
-                    db.SaveChanges();
+
+                        var lastTV = db.ThanhViens.OrderByDescending(t => t.MaTV).FirstOrDefault();
+                        string newMaTV = "TV" + (Convert.ToInt32(lastTV.MaTV.Substring(2)) + 1).ToString("D3");
+                        // Kiểm tra xem tên đăng nhập đã tồn tại chưa
+                        var existingUser = db.ThanhViens.FirstOrDefault(x => x.TenDangNhap == tv.TenDangNhap);
+                        var existingEmail = db.ThanhViens.FirstOrDefault(x => x.Email == tv.Email);
+                        if (existingUser != null)
+                        {
+                            ViewBag.error = "Tên đăng nhập đã tồn tại!! Vui lòng thử lại";
+                            ViewBag.tv.TenDangNhap = tv.TenDangNhap;
+                            return View(tv);
+                        }
+                        else if (existingEmail != null)
+                        {
+                            ViewBag.error = "Email đã được sử dụng!! Vui lòng thử lại";
+                            ViewBag.tv.Email = tv.Email;
+                            return View(tv);
+                        }
+                        else if (tv.MatKhau.Length < 8)
+                        {
+                            ViewBag.error = "Mật khẩu phải có độ dài ít nhất 8 ký tự";
+                            ViewBag.tv.TenDangNhap = tv.TenDangNhap;
+                            return View(tv);
+                        }
+                        tv.NgayThamGia = DateTime.Now;
+                        tv.MaTV = newMaTV;
+                        tv.AnhDaiDien = "avatar.jpg";
+                        tv.MatKhau = BCrypt.Net.BCrypt.HashPassword(tv.MatKhau);
+                        tv.FailedLoginAttempts = 0;
+
+                        // Thêm thành viên mới vào database
+                        db.ThanhViens.Add(tv);
+                        db.SaveChanges();
 
                         // Điều hướng đến trang thành công hoặc đăng nhập
                         return RedirectToAction("Login", "Account");
