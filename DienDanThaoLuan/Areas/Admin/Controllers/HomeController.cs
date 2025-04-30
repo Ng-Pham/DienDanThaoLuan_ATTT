@@ -9,6 +9,8 @@ using DienDanThaoLuan.Attributes;
 
 namespace DienDanThaoLuan.Areas.Admin.Controllers
 {
+    [SessionTimeout]
+    [Authorize]
     public class HomeController : Controller
     {
         DienDanThaoLuanEntities db = new DienDanThaoLuanEntities();

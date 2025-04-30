@@ -9,6 +9,8 @@ using DienDanThaoLuan.Attributes;
 
 namespace DienDanThaoLuan.Areas.Admin.Controllers
 {
+    [SessionTimeout]
+    [Authorize]
     public class QLChuDeController : Controller
     {
         DienDanThaoLuanEntities db = new DienDanThaoLuanEntities();

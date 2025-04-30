@@ -7,9 +7,12 @@ using System.Web;
 using System.Web.Mvc;
 using PagedList;
 using DienDanThaoLuan.Attributes;
+using Ganss.XSS;
 
 namespace DienDanThaoLuan.Areas.Admin.Controllers
 {
+    [SessionTimeout]
+    [Authorize]
     public class QLThanhVienController : Controller
     {
         DienDanThaoLuanEntities db = new DienDanThaoLuanEntities();
@@ -20,10 +23,12 @@ namespace DienDanThaoLuan.Areas.Admin.Controllers
             return View();
         }
         [AuthorizeRole("Admin")]
+        [ValidateInput(false)]
         public ActionResult QLThanhVien(int? page, string searchInput = null, string sortOrder = null)
         {
             var ds = db.ThanhViens.OrderBy(l => l.TenDangNhap).ToList();
-            if(!string.IsNullOrEmpty(searchInput))
+            searchInput = XuLyNoiDung(searchInput);
+            if (!string.IsNullOrEmpty(searchInput))
             {
                 ViewBag.SearchInput = searchInput;
                 ds = ds.Where(l => l.TenDangNhap.Contains(searchInput)).ToList();
@@ -62,6 +67,17 @@ namespace DienDanThaoLuan.Areas.Admin.Controllers
                 TempData["ThongBao"] = "Không tìm thấy tài khoản này";
             }
             return RedirectToAction("QLThanhVien");
+        }
+        public static string XuLyNoiDung(string input)
+        {
+            if (string.IsNullOrWhiteSpace(input))
+                return input;
+
+            var sanitizer = new HtmlSanitizer();
+            sanitizer.AllowedTags.Clear(); // Không cho phép bất kỳ thẻ HTML nào
+            sanitizer.AllowedAttributes.Clear();
+
+            return sanitizer.Sanitize(input);
         }
     }
 }
