@@ -14,7 +14,8 @@ using System.Data.SqlClient;
 using PagedList;
 using System.Web.UI;
 using HtmlAgilityPack;
-using DienDanThaoLuan.Filters;
+using DienDanThaoLuan.Attributes;
+using Serilog;
 using System.Web.UI.WebControls;
 using Ganss.XSS;
 
@@ -347,6 +348,7 @@ namespace DienDanThaoLuan.Controllers
         {
             return PartialView();
         }
+
         public ActionResult ChuDe(int? page, string id)
         {
             var dscd = LayThongTinCD().Where(cd => cd.MaLoai == id).OrderBy(cd => cd.TenCD).ToList();
@@ -361,6 +363,7 @@ namespace DienDanThaoLuan.Controllers
             int iPageNumber = (page ?? 1);
             return View(dscd.ToPagedList(iPageNumber, iSize));
         }
+
         [HttpGet]
         public ActionResult BaiVietTheoCD(int? page, string id, string tenloai)
         {
@@ -677,6 +680,7 @@ namespace DienDanThaoLuan.Controllers
         public ActionResult ThemBL(BinhLuan bl)
         {
             var userId = Session["UserId"] as string;
+            var username = User.Identity.Name;
             if (ModelState.IsValid && !string.IsNullOrEmpty(bl.NoiDung))
             {
                 try
@@ -687,31 +691,32 @@ namespace DienDanThaoLuan.Controllers
                         var lastCmt = db.BinhLuans.OrderByDescending(c => c.MaBL).FirstOrDefault();
                         string newMaBL = "BL" + (Convert.ToInt32(lastCmt.MaBL.Substring(2)) + 1).ToString("D3");
 
-                        bl.MaBL = newMaBL;
-                        bl.NgayGui = DateTime.Now;
-                        bl.TrangThai = "Hiển thị";
-                        if (userId != null)
-                        {
-                            bl.MaTV = userId;
-                        }
-                        else
-                        {
-                            var adId = Session["AdminId"] as string;
-                            bl.MaQTV = adId;
-                        }
-                        bl.NoiDung = nd;
-                        if (string.IsNullOrEmpty(bl.IDCha))
-                        {
-                            bl.IDCha = null;
-                        }
-                        else
-                        {
-                            bl.IDCha = bl.IDCha;
-                        }
-                        bl.MaBV = bl.MaBV;
+                    bl.MaBL = newMaBL; 
+                    bl.NgayGui = DateTime.Now; 
+                    bl.TrangThai = "Hiển thị"; 
+                    if (userId != null)
+                    {
+                        bl.MaTV = userId;
+                    }
+                    else
+                    {
+                        var adId = Session["AdminId"] as string;
+                        bl.MaQTV = adId;
+                    }
+                    bl.NoiDung = nd;
+                    if (string.IsNullOrEmpty(bl.IDCha))
+                    {
+                        bl.IDCha = null;
+                    }
+                    else
+                    {
+                        bl.IDCha = bl.IDCha;
+                    }
+                    bl.MaBV = bl.MaBV;
+                    Log.Information("User đã bình luận có mã là: {bl.MaBL}", bl.MaBL);
 
-                        db.BinhLuans.Add(bl);
-                        db.SaveChanges();
+                    db.BinhLuans.Add(bl);
+                    db.SaveChanges();
 
                         var maNgVietBai = db.BaiViets.Where(bv => bv.MaBV == bl.MaBV).Select(bv => bv.MaTV).FirstOrDefault();
                         if (maNgVietBai != null)

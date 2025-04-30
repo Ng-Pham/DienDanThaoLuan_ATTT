@@ -1,5 +1,5 @@
-﻿using DienDanThaoLuan.Filters;
-using DienDanThaoLuan.Models;
+﻿using DienDanThaoLuan.Models;
+using DienDanThaoLuan.Attributes;
 using PagedList;
 using System;
 using System.Collections.Generic;
@@ -16,6 +16,7 @@ namespace DienDanThaoLuan.Areas.Admin.Controllers
     {
         DienDanThaoLuanEntities db = new DienDanThaoLuanEntities();
         // GET: Admin/ThongBaoTong
+        [AuthorizeRole("Admin")]
         public ActionResult Index(int? page)
         {
             var ds = db.ThongBaos.Where(l => l.LoaiTB.Contains("Thông báo hệ thống")).ToList();

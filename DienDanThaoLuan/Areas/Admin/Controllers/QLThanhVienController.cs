@@ -6,7 +6,7 @@ using System.Linq;
 using System.Web;
 using System.Web.Mvc;
 using PagedList;
-using DienDanThaoLuan.Filters;
+using DienDanThaoLuan.Attributes;
 using Ganss.XSS;
 
 namespace DienDanThaoLuan.Areas.Admin.Controllers
@@ -17,10 +17,12 @@ namespace DienDanThaoLuan.Areas.Admin.Controllers
     {
         DienDanThaoLuanEntities db = new DienDanThaoLuanEntities();
         // GET: Admin/QLThanhVien
+        [AuthorizeRole("Admin")]
         public ActionResult Index()
         {
             return View();
         }
+        [AuthorizeRole("Admin")]
         [ValidateInput(false)]
         public ActionResult QLThanhVien(int? page, string searchInput = null, string sortOrder = null)
         {

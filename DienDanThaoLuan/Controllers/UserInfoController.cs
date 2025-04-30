@@ -7,6 +7,7 @@ using System.Web.Mvc;
 using DienDanThaoLuan.Models;
 using Ganss.XSS;
 using Microsoft.Ajax.Utilities;
+using Serilog;
 
 namespace DienDanThaoLuan.Controllers
 {
@@ -27,9 +28,11 @@ namespace DienDanThaoLuan.Controllers
                 var admin = db.QuanTriViens.SingleOrDefault(a => a.TenDangNhap.ToLower() == username.ToLower());
                 if (admin != null)
                 {
+                    Log.Information("AdminInfo {username} đã vào trang thông tin cá nhân", username);
                     return View("AdminInfo", admin);
                 }
             }
+            Log.Information("MemberInfo {username} đã vào trang thông tin cá nhân", username);
             return View("MemberInfo",member);
         }
         [Authorize]
@@ -166,6 +169,7 @@ namespace DienDanThaoLuan.Controllers
                     else
                     {
                         admin.MatKhau = BCrypt.Net.BCrypt.HashPassword(newPassword);
+                        Log.Information("AdminInfo {username} đã thay đổi mật khẩu ở trang thông tin cá nhân", username);
                         db.SaveChanges();
                         TempData["SuccessMessage"] = "Đổi mật khẩu thành công!";
                     }
@@ -189,6 +193,7 @@ namespace DienDanThaoLuan.Controllers
                 else
                 {
                     member.MatKhau = BCrypt.Net.BCrypt.HashPassword(newPassword);
+                    Log.Information("MemberInfo {username} đã thay đổi mật khẩu ở trang thông tin cá nhân", username);
                     db.SaveChanges();
                     TempData["SuccessMessage"] = "Đổi mật khẩu thành công!";
                 }

@@ -14,6 +14,7 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using System.Net.Http;
 using Ganss.XSS;
+using Serilog;
 
 namespace DienDanThaoLuan.Controllers
 {
@@ -108,6 +109,8 @@ namespace DienDanThaoLuan.Controllers
                 db.SaveChanges();
                 FormsAuthentication.SetAuthCookie(username, false);
                 Session["AdminId"] = adminAcc.MaQTV;
+                Session["Role"] = "Admin"; // lưu quyền
+                Log.Information("AdminId {Username} đã đăng nhập thành công", username);
                 return RedirectToAction("Index", "DienDanThaoLuan");
             }
             if (memberAcc.LockoutUntil != null && memberAcc.LockoutUntil > DateTime.Now)
@@ -148,6 +151,8 @@ namespace DienDanThaoLuan.Controllers
             db.SaveChanges();
             FormsAuthentication.SetAuthCookie(username, false);
             Session["UserId"] = memberAcc.MaTV;
+            Session["Role"] = "Member"; // lưu quyền
+            Log.Information("UserId {Username} đã đăng nhập thành công", username);
             return RedirectToAction("Index", "DienDanThaoLuan");
         }
 
@@ -185,9 +190,14 @@ namespace DienDanThaoLuan.Controllers
         //Chức năng Đăng xuất 
         public ActionResult Logout()
         {
+            var username = User.Identity.Name;
             Session["UserId"] = null;
             Session["AdminId"] = null;
+            Session["Role"] = null;
             FormsAuthentication.SignOut();
+
+            Log.Information("User {Username} đã đăng xuất thành công", username);
+
             return RedirectToAction("Index", "DienDanThaoLuan");
         }
 
@@ -318,6 +328,7 @@ namespace DienDanThaoLuan.Controllers
             user.MatKhau = BCrypt.Net.BCrypt.HashPassword(newPassword); // Cập nhật mật khẩu mới vào database
             user.LastPasswordResetRequest = DateTime.Now; // Cập nhật thời gian gửi yêu cầu cuối cùng
             db.SaveChanges();
+            Log.Information("User {user.TenDangNhap} đã đổi mật khẩu thành công", user.TenDangNhap);
 
             // Gửi email mật khẩu mới cho người dùng
             SendPasswordResetEmail(user.Email, newPassword);
