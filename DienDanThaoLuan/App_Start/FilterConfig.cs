@@ -1,5 +1,6 @@
 ﻿using System.Web;
 using System.Web.Mvc;
+using DienDanThaoLuan.Attributes;
 
 namespace DienDanThaoLuan
 {
@@ -8,6 +9,7 @@ namespace DienDanThaoLuan
         public static void RegisterGlobalFilters(GlobalFilterCollection filters)
         {
             filters.Add(new HandleErrorAttribute());
+            filters.Add(new CustomRequireHttpsAttribute());
         }
     }
 }

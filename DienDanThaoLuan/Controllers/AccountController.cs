@@ -10,6 +10,7 @@ using System.Web.Mvc;
 using System.Web.Security;
 using DienDanThaoLuan.Controllers;
 using System.Web.Helpers;
+using Serilog;
 
 namespace DienDanThaoLuan.Controllers
 {
@@ -66,6 +67,8 @@ namespace DienDanThaoLuan.Controllers
                 // Đăng nhập thành công với tài khoản QuanTriVien
                 FormsAuthentication.SetAuthCookie(username, false);
                 Session["AdminId"] = adminAcc.MaQTV;
+                Session["Role"] = "Admin"; // lưu quyền
+                Log.Information("AdminId {Username} đã đăng nhập thành công", username);
                 return RedirectToAction("Index", "DienDanThaoLuan");
             }
 
@@ -85,14 +88,21 @@ namespace DienDanThaoLuan.Controllers
             //Đăng nhập thành công
             FormsAuthentication.SetAuthCookie(username, false);
             Session["UserId"] = memberAcc.MaTV;
+            Session["Role"] = "Member"; // lưu quyền
+            Log.Information("UserId {Username} đã đăng nhập thành công", username);
             return RedirectToAction("Index", "DienDanThaoLuan");
         }//---Hoàn thành chức năng đăng nhập
         //Chức năng Đăng xuất 
         public ActionResult Logout()
         {
+            var username = User.Identity.Name;
             Session["UserId"] = null;
             Session["AdminId"] = null;
+            Session["Role"] = null;
             FormsAuthentication.SignOut();
+
+            Log.Information("User {Username} đã đăng xuất thành công", username);
+
             return RedirectToAction("Index", "DienDanThaoLuan");
         }
 
@@ -137,6 +147,7 @@ namespace DienDanThaoLuan.Controllers
                     tv.AnhDaiDien = "avatar.jpg";
                     tv.MatKhau = BCrypt.Net.BCrypt.HashPassword(tv.MatKhau);
                     // Thêm thành viên mới vào database
+                    Log.Information("User {ViewBag.tv.TenDangNhap} đã đăng kí thành công", ViewBag.tv.TenDangNhap);
                     db.ThanhViens.Add(tv);
                     db.SaveChanges();
 
@@ -188,6 +199,7 @@ namespace DienDanThaoLuan.Controllers
             user.MatKhau = BCrypt.Net.BCrypt.HashPassword(newPassword); // Cập nhật mật khẩu mới vào database
             user.LastPasswordResetRequest = DateTime.Now; // Cập nhật thời gian gửi yêu cầu cuối cùng
             db.SaveChanges();
+            Log.Information("User {user.TenDangNhap} đã đổi mật khẩu thành công", user.TenDangNhap);
 
             // Gửi email mật khẩu mới cho người dùng
             SendPasswordResetEmail(user.Email, newPassword);

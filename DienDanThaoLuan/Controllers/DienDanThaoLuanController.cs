@@ -14,6 +14,8 @@ using System.Data.SqlClient;
 using PagedList;
 using System.Web.UI;
 using HtmlAgilityPack;
+using DienDanThaoLuan.Attributes;
+using Serilog;
 
 namespace DienDanThaoLuan.Controllers
 {
@@ -275,6 +277,7 @@ namespace DienDanThaoLuan.Controllers
         {
             return PartialView();
         }
+
         public ActionResult ChuDe(int? page, string id)
         {
             var dscd = LayThongTinCD().Where(cd => cd.MaLoai == id).OrderBy(cd => cd.TenCD).ToList();
@@ -289,6 +292,7 @@ namespace DienDanThaoLuan.Controllers
             int iPageNumber = (page ?? 1);
             return View(dscd.ToPagedList(iPageNumber, iSize));
         }
+
         [HttpGet]
         public ActionResult BaiVietTheoCD(int? page, string id, string tenloai)
         {
@@ -582,6 +586,7 @@ namespace DienDanThaoLuan.Controllers
         public ActionResult ThemBL(BinhLuan bl)
         {
             var userId = Session["UserId"] as string;
+            var username = User.Identity.Name;
             if (ModelState.IsValid && !string.IsNullOrEmpty(bl.NoiDung))
             {
                 try
@@ -613,7 +618,7 @@ namespace DienDanThaoLuan.Controllers
                         bl.IDCha = bl.IDCha;
                     }
                     bl.MaBV = bl.MaBV;
-
+                    Log.Information("User đã bình luận có mã là: {bl.MaBL}", bl.MaBL);
                     db.BinhLuans.Add(bl);
                     db.SaveChanges();
 

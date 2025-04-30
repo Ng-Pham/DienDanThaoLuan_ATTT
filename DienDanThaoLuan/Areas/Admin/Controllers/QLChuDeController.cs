@@ -5,6 +5,7 @@ using System.Linq;
 using System.Web;
 using System.Web.Mvc;
 using PagedList;
+using DienDanThaoLuan.Attributes;
 
 namespace DienDanThaoLuan.Areas.Admin.Controllers
 {
@@ -12,6 +13,7 @@ namespace DienDanThaoLuan.Areas.Admin.Controllers
     {
         DienDanThaoLuanEntities db = new DienDanThaoLuanEntities();
         // GET: Admin/QLChuDe
+        [AuthorizeRole("Admin")]
         public ActionResult QLLoaiCD(int? page)
         {
             var ds = db.LoaiCDs.OrderBy(l => l.TenLoai).ToList();

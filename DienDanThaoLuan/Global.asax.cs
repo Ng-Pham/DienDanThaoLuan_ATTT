@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Serilog;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
@@ -12,10 +13,17 @@ namespace DienDanThaoLuan
     {
         protected void Application_Start()
         {
+            Log.Logger = new LoggerConfiguration()
+            .MinimumLevel.Debug()
+            .WriteTo.File(@"D:\Logs\diendanthoaoluan-.txt", rollingInterval: RollingInterval.Day)
+            .CreateLogger();
+
             AreaRegistration.RegisterAllAreas();
             FilterConfig.RegisterGlobalFilters(GlobalFilters.Filters);
             RouteConfig.RegisterRoutes(RouteTable.Routes);
             BundleConfig.RegisterBundles(BundleTable.Bundles);
+
+            Log.Information("Ứng dụng đã khởi động");
         }
     }
 }

@@ -5,6 +5,7 @@ using System.Linq;
 using System.Web;
 using System.Web.Mvc;
 using PagedList;
+using DienDanThaoLuan.Attributes;
 
 namespace DienDanThaoLuan.Areas.Admin.Controllers
 {
@@ -12,10 +13,12 @@ namespace DienDanThaoLuan.Areas.Admin.Controllers
     {
         DienDanThaoLuanEntities db = new DienDanThaoLuanEntities();
         // GET: Admin/Home
+        [AuthorizeRole("Admin")]
         public ActionResult Index()
         {
             return View();
         }
+        [AuthorizeRole("Admin")]
         public ActionResult GopY(int? page)
         {
             var ds = db.Gopies.OrderByDescending(l => l.NgayGui).ToList();
