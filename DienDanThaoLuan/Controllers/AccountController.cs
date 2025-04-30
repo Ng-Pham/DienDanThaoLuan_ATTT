@@ -254,6 +254,7 @@ namespace DienDanThaoLuan.Controllers
                         tv.FailedLoginAttempts = 0;
                         tv.LastFailedLogin = null;
                         tv.LockoutUntil = null;
+
                         // Thêm thành viên mới vào database
                         db.ThanhViens.Add(tv);
                         db.SaveChanges();
