@@ -123,6 +123,7 @@
                     <h2 class="heading-section" style="font-size:40px; cursor: pointer;"><a href="@Url.Action("Index", "DienDanThaoLuan")" style="color:white">IT Xperience</a></h2>
                 </div>
             </div>
+<<<<<<< HEAD
 
         <div class="row justify-content-center">
             <div class="col-md-6 col-lg-4">
@@ -151,7 +152,41 @@
                             </div>
                             <div class="w-50 text-md-right">
                                 <a href="@Url.Action("ForgotPassword","Account")" style="color: #fff">Forgot Password</a>
+=======
+            <div class="row justify-content-center">
+                <div class="col-md-6 col-lg-4">
+                    <div class="login-wrap p-0">
+                        <h3 class="mb-4 text-center">LOGIN</h3>
+                        <form action="#" class="signin-form" method="post">
+                            <div class="form-group">
+                                <input type="text" class="form-control" placeholder="Username" required name="username" value="@User.Identity.Name">
+>>>>>>> fe576c4812e9d6f3222165e8d732891edade670d
                             </div>
+                            <div class="form-group">
+                                <input id="password-field" type="password" class="form-control" placeholder="Password" required name="password">
+                                <span toggle="#password-field" class="fa fa-fw fa-eye field-icon toggle-password"></span>
+                            </div>
+                            @Html.Partial("_PartialCapcha")
+                            <div class="form-group">
+                                <button type="submit" class="form-control btn btn-primary submit px-3">Sign In</button>
+                            </div>
+                            <p style="color: yellow; font-size:18px">@ViewBag.error</p>
+                            <div class="form-group d-md-flex">
+                                <div class="w-50">
+                                    <label class="checkbox-wrap checkbox-primary">
+                                        Remember Me
+                                        <input type="checkbox" checked>
+                                        <span class="checkmark"></span>
+                                    </label>
+                                </div>
+                                <div class="w-50 text-md-right">
+                                    <a href="@Url.Action("ForgotPassword","Account")" style="color: #fff">Forgot Password</a>
+                                </div>
+                            </div>
+                        </form>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <p class="mb-0" style="font-style: italic;">&mdash; Don't have an account? &mdash;</p>
+                            <a href="@Url.Action("Register","Account")" class="px-1 py-1 mr-md-1 rounded" style="color: #fbceb5; text-decoration: none; font-weight: bold; ">Sign Up →</a>
                         </div>
                     </form>
                     <div class="d-flex justify-content-between align-items-center">
@@ -161,6 +196,7 @@
                 </div>
             </div>
         </div>
+<<<<<<< HEAD
 
         </div>
     </section>
@@ -173,6 +209,18 @@
                 // Lấy input field liên kết với biểu tượng
                 var input = $($(this).attr("toggle"));
 
+=======
+    </section>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            // Khi nhấp vào icon span
+            $(".toggle-password").click(function () {
+                // Lấy input field liên kết với biểu tượng
+                var input = $($(this).attr("toggle"));
+
+>>>>>>> fe576c4812e9d6f3222165e8d732891edade670d
                 // Thay đổi thuộc tính type giữa 'password' và 'text'
                 if (input.attr("type") === "password") {
                     input.attr("type", "text");
@@ -184,5 +232,10 @@
             });
         });
     </script>
+<<<<<<< HEAD
 </body >
 </html >
+=======
+</body>
+</html>
+>>>>>>> fe576c4812e9d6f3222165e8d732891edade670d

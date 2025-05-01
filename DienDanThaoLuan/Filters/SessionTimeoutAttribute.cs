@@ -13,7 +13,11 @@ namespace DienDanThaoLuan.Filters
             if (HttpContext.Current.Session["LastActivity"] != null)
             {
                 DateTime lastActivity = (DateTime)HttpContext.Current.Session["LastActivity"];
+<<<<<<< HEAD
                 if ((DateTime.Now - lastActivity).TotalMinutes > 2)
+=======
+                if ((DateTime.Now - lastActivity).TotalMinutes > 15)
+>>>>>>> fe576c4812e9d6f3222165e8d732891edade670d
                 {
                     HttpContext.Current.Session.Clear();
                     filterContext.Result = new RedirectResult("/Account/Login");

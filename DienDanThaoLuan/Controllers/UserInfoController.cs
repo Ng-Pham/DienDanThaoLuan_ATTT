@@ -5,6 +5,7 @@ using System.Linq;
 using System.Web;
 using System.Web.Mvc;
 using DienDanThaoLuan.Models;
+using Ganss.XSS;
 using Microsoft.Ajax.Utilities;
 using Serilog;
 using Ganss.Xss;
@@ -37,7 +38,10 @@ namespace DienDanThaoLuan.Controllers
         }
         [Authorize]
         [HttpPost]
+<<<<<<< HEAD
         [ValidateAntiForgeryToken]
+=======
+>>>>>>> fe576c4812e9d6f3222165e8d732891edade670d
         [ValidateInput(false)]
         public ActionResult UpdateMember(ThanhVien model)
         {
@@ -94,7 +98,10 @@ namespace DienDanThaoLuan.Controllers
         }
         [Authorize]
         [HttpPost]
+<<<<<<< HEAD
         [ValidateAntiForgeryToken]
+=======
+>>>>>>> fe576c4812e9d6f3222165e8d732891edade670d
         [ValidateInput(false)]
         public ActionResult UpdateAdmin(QuanTriVien model)
         {
@@ -105,7 +112,11 @@ namespace DienDanThaoLuan.Controllers
                 model.HoTen = XuLyNoiDung(model.HoTen);
                 model.Email = XuLyNoiDung(model.Email);
                 model.SDT = XuLyNoiDung(model.SDT);
+<<<<<<< HEAD
                 if (string.IsNullOrEmpty(model.HoTen) || string.IsNullOrEmpty(model.Email) || string.IsNullOrEmpty(model.SDT))
+=======
+                if (string.IsNullOrEmpty(model.HoTen)|| string.IsNullOrEmpty(model.Email) || string.IsNullOrEmpty(model.SDT))
+>>>>>>> fe576c4812e9d6f3222165e8d732891edade670d
                 {
                     TempData["ErrorMessage"] = "Vui lòng nhập thông tin hợp lệ!";
                     return RedirectToAction("Index");
@@ -139,7 +150,10 @@ namespace DienDanThaoLuan.Controllers
 
         [Authorize]
         [HttpPost]
+<<<<<<< HEAD
         [ValidateAntiForgeryToken]
+=======
+>>>>>>> fe576c4812e9d6f3222165e8d732891edade670d
         [ValidateInput(false)]
         public ActionResult ChangePassword(string currentPassword, string newPassword, string confirmPassword)
         {
@@ -151,8 +165,12 @@ namespace DienDanThaoLuan.Controllers
             {
                 TempData["ErrorMessage"] = "Vui lòng nhập mật khẩu mới hợp lệ!";
                 return RedirectToAction("Index");
+<<<<<<< HEAD
             }
 
+=======
+            }    
+>>>>>>> fe576c4812e9d6f3222165e8d732891edade670d
             if (member == null)
             {
                 var admin = db.QuanTriViens.SingleOrDefault(a => a.TenDangNhap.ToLower() == username.ToLower());

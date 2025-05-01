@@ -5,7 +5,9 @@ using System.Web;
 using System.Web.Mvc;
 using System.Xml;
 using DienDanThaoLuan.Controllers;
+using DienDanThaoLuan.Filters;
 using DienDanThaoLuan.Models;
+using Ganss.XSS;
 using PagedList;
 using DienDanThaoLuan.Filters;
 using Ganss.Xss;
@@ -81,6 +83,7 @@ namespace DienDanThaoLuan.Areas.Admin.Controllers
             
             return PartialView(tttv);
         }
+        
         public ActionResult ChiTietBV(string id)
         {
             var ttbv = db.BaiViets.Where(bv => bv.MaBV == id).FirstOrDefault();
@@ -96,7 +99,11 @@ namespace DienDanThaoLuan.Areas.Admin.Controllers
             if (string.IsNullOrEmpty(lydo))
             {
                 TempData["Error"] = "Vui lòng nhập đúng định dạng!";
+<<<<<<< HEAD
                 return RedirectToAction("ChiTietBV", new { id = id });
+=======
+                return RedirectToAction ("ChiTietBV", new { id = id });
+>>>>>>> fe576c4812e9d6f3222165e8d732891edade670d
             }
             var baiviet = db.BaiViets.Find(id);
             if (trangthai == "duyet")

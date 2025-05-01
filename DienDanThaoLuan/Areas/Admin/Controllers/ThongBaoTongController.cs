@@ -1,5 +1,5 @@
-﻿using DienDanThaoLuan.Attributes;
-using DienDanThaoLuan.Models;
+﻿using DienDanThaoLuan.Models;
+using DienDanThaoLuan.Attributes;
 using PagedList;
 using System;
 using System.Collections.Generic;

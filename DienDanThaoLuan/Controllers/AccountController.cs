@@ -10,6 +10,10 @@ using System.Web.Mvc;
 using System.Web.Security;
 using DienDanThaoLuan.Controllers;
 using System.Web.Helpers;
+using System.Threading.Tasks;
+using Newtonsoft.Json;
+using System.Net.Http;
+using Ganss.XSS;
 using Serilog;
 
 using System.Threading.Tasks;
@@ -23,7 +27,10 @@ namespace DienDanThaoLuan.Controllers
     {
         // GET: Account
         DienDanThaoLuanEntities db = new DienDanThaoLuanEntities();
+<<<<<<< HEAD
 
+=======
+>>>>>>> fe576c4812e9d6f3222165e8d732891edade670d
         [Authorize]
         [HttpPost]
         public ActionResult KeepAlive()
@@ -82,6 +89,13 @@ namespace DienDanThaoLuan.Controllers
                     return View();
                 }
 
+                if (adminAcc.LockoutUntil != null && adminAcc.LockoutUntil > DateTime.Now)
+                {
+                    ViewBag.error = $"Tài khoản bị khóa đến {adminAcc.LockoutUntil.Value.ToString("HH:mm:ss")}. Vui lòng thử lại sau.";
+                    ViewBag.username = username;
+                    return View();
+                }
+
                 // Check đúng sai tài khoản mật khẩu của QuanTriVien
                 if (!BCrypt.Net.BCrypt.Verify(password, adminAcc.MatKhau) || adminAcc.TenDangNhap != username)
                 {
@@ -92,7 +106,10 @@ namespace DienDanThaoLuan.Controllers
                     {
                         adminAcc.LockoutUntil = DateTime.Now.AddMinutes(5);
                         db.SaveChanges();
+<<<<<<< HEAD
                         SendLockoutEmail(adminAcc.Email, adminAcc.TenDangNhap, adminAcc.LockoutUntil.Value);
+=======
+>>>>>>> fe576c4812e9d6f3222165e8d732891edade670d
                         ViewBag.error = "Bạn đã nhập sai 5 lần. Tài khoản bị khóa 5 phút.";
                     }
                     else
@@ -100,6 +117,10 @@ namespace DienDanThaoLuan.Controllers
                         db.SaveChanges();
                         ViewBag.error = $"Sai tên tài khoản hoặc mật khẩu!! Lần nhập sai {adminAcc.FailedLoginAttempts}/5. Vui lòng thử lại.";
                     }
+<<<<<<< HEAD
+=======
+
+>>>>>>> fe576c4812e9d6f3222165e8d732891edade670d
                     ViewBag.username = username;
                     return View();
                 }
@@ -136,7 +157,10 @@ namespace DienDanThaoLuan.Controllers
                 {
                     memberAcc.LockoutUntil = DateTime.Now.AddMinutes(5);
                     db.SaveChanges();
+<<<<<<< HEAD
                     SendLockoutEmail(memberAcc.Email, memberAcc.TenDangNhap, memberAcc.LockoutUntil.Value);
+=======
+>>>>>>> fe576c4812e9d6f3222165e8d732891edade670d
                     ViewBag.error = "Bạn đã nhập sai 5 lần. Tài khoản bị khóa 5 phút.";
                 }
                 else
@@ -157,6 +181,7 @@ namespace DienDanThaoLuan.Controllers
             Log.Information("UserId {Username} đã đăng nhập thành công", username);
             return RedirectToAction("Index", "DienDanThaoLuan");
         }
+<<<<<<< HEAD
         private void SendLockoutEmail(string toEmail, string username, DateTime lockoutUntil)
         {
             var fromAddress = new MailAddress("tnn231223@gmail.com", "Diễn Đàn Thảo Luận Cảnh Báo");
@@ -193,6 +218,8 @@ namespace DienDanThaoLuan.Controllers
                 smtp.Send(message);
             }
         }
+=======
+>>>>>>> fe576c4812e9d6f3222165e8d732891edade670d
 
         private bool IsPasswordStrongEnough(string password)
         {
@@ -211,10 +238,17 @@ namespace DienDanThaoLuan.Controllers
             using (var httpClient = new HttpClient())
             {
                 var parameters = new Dictionary<string, string>
+<<<<<<< HEAD
                  {
                      { "secret", secretKey },
                      { "response", response }
                  };
+=======
+                {
+                    { "secret", secretKey },
+                    { "response", response }
+                };
+>>>>>>> fe576c4812e9d6f3222165e8d732891edade670d
 
                 var encoded = new FormUrlEncodedContent(parameters);
                 var result = await httpClient.PostAsync("https://www.google.com/recaptcha/api/siteverify", encoded);
@@ -245,6 +279,11 @@ namespace DienDanThaoLuan.Controllers
         {
             return View();
         }
+<<<<<<< HEAD
+=======
+        [ValidateInput(false)]
+        [HttpPost]
+>>>>>>> fe576c4812e9d6f3222165e8d732891edade670d
         public ActionResult Register(ThanhVien tv)
         {
             if (ModelState.IsValid)
@@ -310,11 +349,18 @@ namespace DienDanThaoLuan.Controllers
                     {
                         ModelState.AddModelError("", "Có lỗi xảy ra, vui lòng thử lại! " + ex.Message);
                     }
+<<<<<<< HEAD
                 }
             }
             return View(tv); ;
         }//---Hoàn thành chức năng đăng ký
 
+=======
+                }    
+            }
+            return View(tv); ;
+        }//---Hoàn thành chức năng đăng ký
+>>>>>>> fe576c4812e9d6f3222165e8d732891edade670d
         public static string XuLyNoiDung(string input)
         {
             if (string.IsNullOrWhiteSpace(input))
@@ -326,6 +372,10 @@ namespace DienDanThaoLuan.Controllers
 
             return sanitizer.Sanitize(input);
         }
+<<<<<<< HEAD
+=======
+
+>>>>>>> fe576c4812e9d6f3222165e8d732891edade670d
         //Chức năng quên mật khẩu---
         [HttpGet]
         public ActionResult ForgotPassword()
