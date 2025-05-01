@@ -115,6 +115,7 @@
         <span>Chỉnh sửa ảnh bìa</span>
         @using (Html.BeginForm("ChangeCover", "UserInfo", FormMethod.Post, new { enctype = "multipart/form-data", id = "coverForm" }))
         {
+            @Html.AntiForgeryToken()
             <input type="file"
                    id="cover"
                    name="cover"
@@ -133,6 +134,7 @@
                 <i class="fas fa-camera"></i>
                 @using (Html.BeginForm("ChangeAvatar", "UserInfo", FormMethod.Post, new { enctype = "multipart/form-data", id = "avatarForm" }))
                 {
+                    @Html.AntiForgeryToken()
                     <input type="file"
                            id="avatar"
                            name="avatar"
@@ -173,6 +175,7 @@
                     <h5 class="card-title">Thông tin Quản trị viên</h5>
                     @using (Html.BeginForm("UpdateAdmin", "UserInfo", FormMethod.Post, new { @class = "needs-validation", novalidate = "novalidate" }))
                     {
+                        @Html.AntiForgeryToken()
                         @Html.HiddenFor(m => m.MaQTV)
 
                         <div class="mb-3">
@@ -189,7 +192,7 @@
                             <p>Giới tính: </p>
                             @{
                                 var gioiTinhList = new List<SelectListItem>
-                                                {
+                                                                {
                                     new SelectListItem { Value = "", Text = "Chọn giới tính",  Disabled = true, Selected = string.IsNullOrEmpty(Model.GioiTinh) },
                                     new SelectListItem { Value = "Nam", Text = "Nam", Selected = Model.GioiTinh == "Nam" },
                                     new SelectListItem { Value = "Nữ", Text = "Nữ", Selected = Model.GioiTinh == "Nữ" },
@@ -222,6 +225,7 @@
                     <h5 class="card-title">Đổi mật khẩu</h5>
                     @using (Html.BeginForm("ChangePassword", "UserInfo", FormMethod.Post, new { @class = "needs-validation", novalidate = "novalidate" }))
                     {
+                        @Html.AntiForgeryToken()
                         <div class="mb-3">
                             <label for="currentPassword" class="form-label" style="margin-bottom: 1rem">Mật khẩu hiện tại</label>
                             <input type="password" name="currentPassword" class="form-control" required>

@@ -6,9 +6,12 @@ using System.Web;
 using System.Web.Mvc;
 using PagedList;
 using DienDanThaoLuan.Attributes;
+using DienDanThaoLuan.Filters;
 
 namespace DienDanThaoLuan.Areas.Admin.Controllers
 {
+    [SessionTimeout]
+    [Authorize]
     public class QLChuDeController : Controller
     {
         DienDanThaoLuanEntities db = new DienDanThaoLuanEntities();
@@ -22,6 +25,7 @@ namespace DienDanThaoLuan.Areas.Admin.Controllers
 
             return View(ds.ToPagedList(iPageNumber, iSize));
         }
+        [AuthorizeRole("Admin")]
         [HttpGet]
         public ActionResult TaoLoaiCD()
         {

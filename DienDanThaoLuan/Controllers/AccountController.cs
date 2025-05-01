@@ -12,6 +12,11 @@ using DienDanThaoLuan.Controllers;
 using System.Web.Helpers;
 using Serilog;
 
+using System.Threading.Tasks;
+using Newtonsoft.Json;
+using System.Net.Http;
+using Ganss.Xss;
+
 namespace DienDanThaoLuan.Controllers
 {
     public class AccountController : Controller
@@ -19,6 +24,13 @@ namespace DienDanThaoLuan.Controllers
         // GET: Account
         DienDanThaoLuanEntities db = new DienDanThaoLuanEntities();
 
+        [Authorize]
+        [HttpPost]
+        public ActionResult KeepAlive()
+        {
+            Session["LastActivity"] = DateTime.Now;
+            return Json(new { success = true });
+        }
         //Dang Nhap && Dang Ky
         [HttpGet]
         public ActionResult Login()
@@ -32,8 +44,16 @@ namespace DienDanThaoLuan.Controllers
             return View();
         }
         [HttpPost]
-        public ActionResult Login(string username, string password)
+        public async Task<ActionResult> Login(string username, string password)
         {
+            string captchaResponse = Request["g-recaptcha-response"];
+            bool isCaptchaValid = await IsCaptchaValid(captchaResponse);
+
+            if (!isCaptchaValid)
+            {
+                ViewBag.error = "Vui lòng xác minh bạn không phải là robot.";
+                return View();
+            }
             //check null tài khoản && mật khẩu
             if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
             {
@@ -55,23 +75,51 @@ namespace DienDanThaoLuan.Controllers
                     ViewBag.username = username;
                     return View();
                 }
+                if (adminAcc.LockoutUntil != null && adminAcc.LockoutUntil > DateTime.Now)
+                {
+                    ViewBag.error = $"Tài khoản bị khóa đến {adminAcc.LockoutUntil.Value.ToString("HH:mm:ss")}. Vui lòng thử lại sau.";
+                    ViewBag.username = username;
+                    return View();
+                }
 
                 // Check đúng sai tài khoản mật khẩu của QuanTriVien
                 if (!BCrypt.Net.BCrypt.Verify(password, adminAcc.MatKhau) || adminAcc.TenDangNhap != username)
                 {
-                    ViewBag.error = "Sai tên tài khoản hoặc mật khẩu!! Vui lòng thử lại";
+                    adminAcc.FailedLoginAttempts++;
+                    adminAcc.LastFailedLogin = DateTime.Now;
+
+                    if (adminAcc.FailedLoginAttempts >= 5)
+                    {
+                        adminAcc.LockoutUntil = DateTime.Now.AddMinutes(5);
+                        db.SaveChanges();
+                        SendLockoutEmail(adminAcc.Email, adminAcc.TenDangNhap, adminAcc.LockoutUntil.Value);
+                        ViewBag.error = "Bạn đã nhập sai 5 lần. Tài khoản bị khóa 5 phút.";
+                    }
+                    else
+                    {
+                        db.SaveChanges();
+                        ViewBag.error = $"Sai tên tài khoản hoặc mật khẩu!! Lần nhập sai {adminAcc.FailedLoginAttempts}/5. Vui lòng thử lại.";
+                    }
                     ViewBag.username = username;
                     return View();
                 }
 
                 // Đăng nhập thành công với tài khoản QuanTriVien
+                adminAcc.FailedLoginAttempts = 0;
+                adminAcc.LockoutUntil = null;
+                db.SaveChanges();
                 FormsAuthentication.SetAuthCookie(username, false);
                 Session["AdminId"] = adminAcc.MaQTV;
                 Session["Role"] = "Admin"; // lưu quyền
                 Log.Information("AdminId {Username} đã đăng nhập thành công", username);
                 return RedirectToAction("Index", "DienDanThaoLuan");
             }
-
+            if (memberAcc.LockoutUntil != null && memberAcc.LockoutUntil > DateTime.Now)
+            {
+                ViewBag.error = $"Tài khoản bị khóa đến {memberAcc.LockoutUntil.Value.ToString("HH:mm:ss")}. Vui lòng thử lại sau.";
+                ViewBag.username = username;
+                return View();
+            }
             if (memberAcc.MatKhau == null)
             {
                 ViewBag.error = "Tài khoản này đã bị khóa!!";
@@ -81,17 +129,102 @@ namespace DienDanThaoLuan.Controllers
             //Check đúng sai tài khoản mật khẩu
             if (!BCrypt.Net.BCrypt.Verify(password, memberAcc.MatKhau) || memberAcc.TenDangNhap != username)
             {
-                ViewBag.error = "Sai tên tài khoản hoặc mật khẩu!! Vui lòng thử lại";
+                memberAcc.FailedLoginAttempts++;
+                memberAcc.LastFailedLogin = DateTime.Now;
+
+                if (memberAcc.FailedLoginAttempts >= 5)
+                {
+                    memberAcc.LockoutUntil = DateTime.Now.AddMinutes(5);
+                    db.SaveChanges();
+                    SendLockoutEmail(memberAcc.Email, memberAcc.TenDangNhap, memberAcc.LockoutUntil.Value);
+                    ViewBag.error = "Bạn đã nhập sai 5 lần. Tài khoản bị khóa 5 phút.";
+                }
+                else
+                {
+                    ViewBag.error = $"Sai tên tài khoản hoặc mật khẩu!! Lần nhập sai {memberAcc.FailedLoginAttempts}/5. Vui lòng thử lại.";
+                    db.SaveChanges();
+                }
                 ViewBag.username = username;
                 return View();
             }
             //Đăng nhập thành công
+            memberAcc.FailedLoginAttempts = 0;
+            memberAcc.LockoutUntil = null;
+            db.SaveChanges();
             FormsAuthentication.SetAuthCookie(username, false);
             Session["UserId"] = memberAcc.MaTV;
             Session["Role"] = "Member"; // lưu quyền
             Log.Information("UserId {Username} đã đăng nhập thành công", username);
             return RedirectToAction("Index", "DienDanThaoLuan");
-        }//---Hoàn thành chức năng đăng nhập
+        }
+        private void SendLockoutEmail(string toEmail, string username, DateTime lockoutUntil)
+        {
+            var fromAddress = new MailAddress("tnn231223@gmail.com", "Diễn Đàn Thảo Luận Cảnh Báo");
+            var toAddress = new MailAddress(toEmail);
+            const string fromPassword = "njic xpiv pzwm dugg"; // dùng app password, không dùng password thật
+            string subject = "Thông báo: Tài khoản bị khóa tạm thời";
+            string body = $@"
+            Xin chào {username},
+
+            Tài khoản của bạn đã bị khóa tạm thời do nhập sai mật khẩu quá 5 lần.
+            Vui lòng thử đăng nhập lại sau thời gian khóa: {lockoutUntil:HH:mm:ss dd/MM/yyyy}.
+
+            Nếu bạn không thực hiện các lần đăng nhập này, vui lòng liên hệ quản trị viên ngay lập tức.
+
+            Trân trọng,
+            Bộ phận hỗ trợ";
+
+            var smtp = new SmtpClient
+            {
+                Host = "smtp.gmail.com", // hoặc mail server khác
+                Port = 587,
+                EnableSsl = true,
+                DeliveryMethod = SmtpDeliveryMethod.Network,
+                UseDefaultCredentials = false,
+                Credentials = new NetworkCredential(fromAddress.Address, fromPassword)
+            };
+
+            using (var message = new MailMessage(fromAddress, toAddress)
+            {
+                Subject = subject,
+                Body = body
+            })
+            {
+                smtp.Send(message);
+            }
+        }
+
+        private bool IsPasswordStrongEnough(string password)
+        {
+            // Kiểm tra mật khẩu (ít nhất 8 ký tự, bao gồm chữ hoa, chữ thường, số và ký tự đặc biệt)
+            bool lengthOK = password.Length >= 8;
+            bool hasLower = password.Any(c => char.IsLower(c));
+            bool hasUpper = password.Any(c => char.IsUpper(c));
+            bool hasNumber = password.Any(c => char.IsDigit(c));
+            bool hasSpecial = password.Any(c => !char.IsLetterOrDigit(c));
+
+            return lengthOK && hasLower && hasUpper && hasNumber && hasSpecial;
+        }
+        private async Task<bool> IsCaptchaValid(string response)
+        {
+            var secretKey = "6LdIEiQrAAAAAAbw05kiLJf_xeo-CQntWAKRCg17";
+            using (var httpClient = new HttpClient())
+            {
+                var parameters = new Dictionary<string, string>
+                 {
+                     { "secret", secretKey },
+                     { "response", response }
+                 };
+
+                var encoded = new FormUrlEncodedContent(parameters);
+                var result = await httpClient.PostAsync("https://www.google.com/recaptcha/api/siteverify", encoded);
+                var jsonResult = await result.Content.ReadAsStringAsync();
+
+                dynamic jsonData = JsonConvert.DeserializeObject(jsonResult);
+                return jsonData.success == true;
+            }
+        }
+        //---Hoàn thành chức năng đăng nhập
         //Chức năng Đăng xuất 
         public ActionResult Logout()
         {
@@ -112,55 +245,87 @@ namespace DienDanThaoLuan.Controllers
         {
             return View();
         }
-        [HttpPost]
         public ActionResult Register(ThanhVien tv)
         {
             if (ModelState.IsValid)
             {
-                try
+                tv.TenDangNhap = XuLyNoiDung(tv.TenDangNhap);
+                tv.Email = XuLyNoiDung(tv.Email);
+                tv.MatKhau = XuLyNoiDung(tv.MatKhau);
+                tv.SDT = XuLyNoiDung(tv.SDT);
+                tv.HoTen = XuLyNoiDung(tv.HoTen);
+                if (string.IsNullOrEmpty(tv.Email) || string.IsNullOrEmpty(tv.TenDangNhap) || string.IsNullOrEmpty(tv.MatKhau) || string.IsNullOrEmpty(tv.SDT) || string.IsNullOrEmpty(tv.HoTen))
                 {
-                    var lastTV = db.ThanhViens.OrderByDescending(t => t.MaTV).FirstOrDefault();
-                    string newMaTV = "TV" + (Convert.ToInt32(lastTV.MaTV.Substring(2)) + 1).ToString("D3");
-                    // Kiểm tra xem tên đăng nhập đã tồn tại chưa
-                    var existingUser = db.ThanhViens.FirstOrDefault(x => x.TenDangNhap == tv.TenDangNhap);
-                    var existingEmail = db.ThanhViens.FirstOrDefault(x => x.Email == tv.Email);
-                    if (existingUser != null)
-                    {
-                        ViewBag.error = "Tên đăng nhập đã tồn tại!! Vui lòng thử lại";
-                        ViewBag.tv.TenDangNhap = tv.TenDangNhap;
-                        return View(tv);
-                    }
-                    else if (existingEmail != null)
-                    {
-                        ViewBag.error = "Email đã được sử dụng!! Vui lòng thử lại";
-                        ViewBag.tv.Email = tv.Email;
-                        return View(tv);
-                    }
-                    else if(tv.MatKhau.Length < 8)
-                    {
-                        ViewBag.error = "Mật khẩu phải có độ dài ít nhất 8 ký tự";
-                        ViewBag.tv.TenDangNhap = tv.TenDangNhap;
-                        return View(tv);
-                    }
-                    tv.NgayThamGia = DateTime.Now;
-                    tv.MaTV = newMaTV;
-                    tv.AnhDaiDien = "avatar.jpg";
-                    tv.MatKhau = BCrypt.Net.BCrypt.HashPassword(tv.MatKhau);
-                    // Thêm thành viên mới vào database
-                    Log.Information("User {ViewBag.tv.TenDangNhap} đã đăng kí thành công", ViewBag.tv.TenDangNhap);
-                    db.ThanhViens.Add(tv);
-                    db.SaveChanges();
 
-                    // Điều hướng đến trang thành công hoặc đăng nhập
-                    return RedirectToAction("Login", "Account");
+                    ViewBag.error = "Có thông tin chứa ký tự không họp lệ. Vui lòng thử lại!";
+                    return View(tv);
                 }
-                catch (Exception ex)
+                else
                 {
-                    ModelState.AddModelError("", "Có lỗi xảy ra, vui lòng thử lại! " + ex.Message);
+                    if (!IsPasswordStrongEnough(tv.MatKhau))
+                    {
+                        ViewBag.error = "Mật khẩu phải có ít nhất 8 ký tự, bao gồm chữ hoa, chữ thường, số và ký tự đặc biệt.";
+                        return View();
+                    }
+                    try
+                    {
+
+                        var lastTV = db.ThanhViens.OrderByDescending(t => t.MaTV).FirstOrDefault();
+                        string newMaTV = "TV" + (Convert.ToInt32(lastTV.MaTV.Substring(2)) + 1).ToString("D3");
+                        // Kiểm tra xem tên đăng nhập đã tồn tại chưa
+                        var existingUser = db.ThanhViens.FirstOrDefault(x => x.TenDangNhap == tv.TenDangNhap);
+                        var existingEmail = db.ThanhViens.FirstOrDefault(x => x.Email == tv.Email);
+                        if (existingUser != null)
+                        {
+                            ViewBag.error = "Tên đăng nhập đã tồn tại!! Vui lòng thử lại";
+                            ViewBag.tv.TenDangNhap = tv.TenDangNhap;
+                            return View(tv);
+                        }
+                        else if (existingEmail != null)
+                        {
+                            ViewBag.error = "Email đã được sử dụng!! Vui lòng thử lại";
+                            ViewBag.tv.Email = tv.Email;
+                            return View(tv);
+                        }
+                        else if (tv.MatKhau.Length < 8)
+                        {
+                            ViewBag.error = "Mật khẩu phải có độ dài ít nhất 8 ký tự";
+                            ViewBag.tv.TenDangNhap = tv.TenDangNhap;
+                            return View(tv);
+                        }
+                        tv.NgayThamGia = DateTime.Now;
+                        tv.MaTV = newMaTV;
+                        tv.AnhDaiDien = "avatar.jpg";
+                        tv.MatKhau = BCrypt.Net.BCrypt.HashPassword(tv.MatKhau);
+                        tv.FailedLoginAttempts = 0;
+
+                        // Thêm thành viên mới vào database
+                        db.ThanhViens.Add(tv);
+                        db.SaveChanges();
+
+                        // Điều hướng đến trang thành công hoặc đăng nhập
+                        return RedirectToAction("Login", "Account");
+                    }
+                    catch (Exception ex)
+                    {
+                        ModelState.AddModelError("", "Có lỗi xảy ra, vui lòng thử lại! " + ex.Message);
+                    }
                 }
             }
             return View(tv); ;
         }//---Hoàn thành chức năng đăng ký
+
+        public static string XuLyNoiDung(string input)
+        {
+            if (string.IsNullOrWhiteSpace(input))
+                return input;
+
+            var sanitizer = new HtmlSanitizer();
+            sanitizer.AllowedTags.Clear(); // Không cho phép bất kỳ thẻ HTML nào
+            sanitizer.AllowedAttributes.Clear();
+
+            return sanitizer.Sanitize(input);
+        }
         //Chức năng quên mật khẩu---
         [HttpGet]
         public ActionResult ForgotPassword()

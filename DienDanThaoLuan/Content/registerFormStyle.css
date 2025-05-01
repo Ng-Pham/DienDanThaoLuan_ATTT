@@ -2311,7 +2311,7 @@ textarea.form-control {
 }
 
 .form-group {
-    margin-bottom: 1rem;
+    margin-bottom: 0.8rem;
 }
 
 .form-text {
@@ -11464,7 +11464,7 @@ h1, h2, h3, h4, h5,
 }
 
 .heading-section {
-    font-size: 28px;
+    font-size: 20px;
     color: #fff;
 }
 

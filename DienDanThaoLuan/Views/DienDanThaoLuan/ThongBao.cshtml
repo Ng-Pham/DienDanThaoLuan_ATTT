@@ -44,6 +44,7 @@
                 <div class="d-flex justify-content-end mt-2">
                     @using (Html.BeginForm("XoaThongBao", "DienDanThaoLuan", FormMethod.Post))
                     {
+                        @Html.AntiForgeryToken()
                         <input type="hidden" name="MaThongBao" value="@tb.MaTB" />
                         <button type="submit" id="btnDelete" class="badge rounded-pill bg-warning text-dark ms-2 mb-2">
                             Xóa

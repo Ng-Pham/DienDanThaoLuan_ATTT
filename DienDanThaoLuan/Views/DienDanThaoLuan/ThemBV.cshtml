@@ -14,6 +14,7 @@
 
 @using (Html.BeginForm("ThemBV", "DienDanThaoLuan", FormMethod.Post))
 {
+    @Html.AntiForgeryToken()
     <div class="container mt-3 p-2 mb-4" style="background-color: white; border-radius:10px;">
         <h2 class="text-center">Thêm Bài Viết Mới</h2>
         @if (!ViewData.ModelState.IsValid)

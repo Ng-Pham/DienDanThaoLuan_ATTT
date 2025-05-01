@@ -7,9 +7,12 @@ using System.Linq;
 using System.Web;
 using System.Web.Mvc;
 using System.Web.UI;
+using DienDanThaoLuan.Filters;
 
 namespace DienDanThaoLuan.Areas.Admin.Controllers
 {
+    [SessionTimeout]
+    [Authorize]
     public class ThongBaoTongController : Controller
     {
         DienDanThaoLuanEntities db = new DienDanThaoLuanEntities();
@@ -22,6 +25,7 @@ namespace DienDanThaoLuan.Areas.Admin.Controllers
             int iPageNumber = (page ?? 1);
             return View(ds.ToPagedList(iPageNumber, iSize));
         }
+        [AuthorizeRole("Admin")]
         [HttpPost]
         public ActionResult Them(string noidung)
         { 

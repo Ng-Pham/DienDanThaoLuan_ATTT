@@ -369,6 +369,7 @@ namespace DienDanThaoLuan.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         [ValidateInput(false)]
         public ActionResult ThemBV(BaiViet post)
         {
@@ -581,6 +582,7 @@ namespace DienDanThaoLuan.Controllers
             return PartialView(dsbl.ToPagedList(iPageNumber, iSize));
         }
         [HttpPost]
+        [ValidateAntiForgeryToken]
         [Authorize]
         [ValidateInput(false)]
         public ActionResult ThemBL(BinhLuan bl)
@@ -709,6 +711,7 @@ namespace DienDanThaoLuan.Controllers
             return View();
         }
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public ActionResult GopY(GopY gopY)
         {
             var userId = Session["UserId"] as string;
@@ -847,6 +850,7 @@ namespace DienDanThaoLuan.Controllers
             return RedirectToAction("ThongBao");
         }
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public ActionResult XoaThongBao(string MaThongBao)
         {
             var tb = db.ThongBaos.Where(t => t.MaTB.Contains(MaThongBao)).SingleOrDefault();

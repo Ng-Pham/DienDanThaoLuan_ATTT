@@ -1,6 +1,7 @@
 ﻿using System.Web;
 using System.Web.Mvc;
 using DienDanThaoLuan.Attributes;
+using DienDanThaoLuan.Filters;
 
 namespace DienDanThaoLuan
 {
@@ -10,6 +11,7 @@ namespace DienDanThaoLuan
         {
             filters.Add(new HandleErrorAttribute());
             filters.Add(new CustomRequireHttpsAttribute());
+            filters.Add(new SessionTimeoutAttribute());
         }
     }
 }
