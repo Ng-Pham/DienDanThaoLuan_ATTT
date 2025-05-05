@@ -249,12 +249,21 @@ VALUES
 ('TB003', N'<NoiDung>Chúc mừng năm mới 2024</NoiDung>', '2024-10-02 13:00:00', N'Thông báo hệ thống', NULL, NULL, NULL, NULL, 0),
 ('TB004', N'<NoiDung>Chào mừng đến tới IT Xperience</NoiDung>', '2024-11-01 09:00:00', N'Thông báo hệ thống', NULL, NULL, NULL, NULL, 1);
 
+USE [DienDanThaoLuan]
+GO
+/****** Object:  StoredProcedure [dbo].[AutoBackup]    Script Date: 5/1/2025 11:09:46 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+ALTER PROCEDURE [dbo].[AutoBackup]
+AS
+BEGIN
+    DECLARE @filename NVARCHAR(200)
+    SET @filename = 'D:\Backups\DienDanDB_' + 
+        CONVERT(VARCHAR(10), GETDATE(), 120) + '.bak'
 
--- Thêm cột FailedLoginAttempts, LastFailedLogin và LockoutUntil
-ALTER TABLE ThanhVien ADD FailedLoginAttempts INT DEFAULT 0;
-ALTER TABLE ThanhVien ADD LastFailedLogin DATETIME NULL;
-ALTER TABLE ThanhVien ADD LockoutUntil DATETIME NULL;
-
-ALTER TABLE QuanTriVien ADD FailedLoginAttempts INT DEFAULT 0;
-ALTER TABLE QuanTriVien ADD LastFailedLogin DATETIME NULL;
-ALTER TABLE QuanTriVien ADD LockoutUntil DATETIME NULL;
+    BACKUP DATABASE DienDanThaoLuan
+    TO DISK = @filename
+    WITH INIT, FORMAT, MEDIANAME = 'DienDanBackup', NAME = 'Full Backup'
+END
