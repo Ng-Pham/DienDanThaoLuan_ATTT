@@ -17,7 +17,8 @@ using HtmlAgilityPack;
 using DienDanThaoLuan.Attributes;
 using Serilog;
 using System.Web.UI.WebControls;
-using Ganss.XSS;
+using Ganss.Xss;
+using DienDanThaoLuan.Filters;
 
 namespace DienDanThaoLuan.Controllers
 {
@@ -693,32 +694,32 @@ namespace DienDanThaoLuan.Controllers
                         var lastCmt = db.BinhLuans.OrderByDescending(c => c.MaBL).FirstOrDefault();
                         string newMaBL = "BL" + (Convert.ToInt32(lastCmt.MaBL.Substring(2)) + 1).ToString("D3");
 
-                    bl.MaBL = newMaBL; 
-                    bl.NgayGui = DateTime.Now; 
-                    bl.TrangThai = "Hiển thị"; 
-                    if (userId != null)
-                    {
-                        bl.MaTV = userId;
-                    }
-                    else
-                    {
-                        var adId = Session["AdminId"] as string;
-                        bl.MaQTV = adId;
-                    }
-                    bl.NoiDung = nd;
-                    if (string.IsNullOrEmpty(bl.IDCha))
-                    {
-                        bl.IDCha = null;
-                    }
-                    else
-                    {
-                        bl.IDCha = bl.IDCha;
-                    }
-                    bl.MaBV = bl.MaBV;
-                    Log.Information("User đã bình luận có mã là: {bl.MaBL}", bl.MaBL);
+                        bl.MaBL = newMaBL; 
+                        bl.NgayGui = DateTime.Now; 
+                        bl.TrangThai = "Hiển thị"; 
+                        if (userId != null)
+                        {
+                            bl.MaTV = userId;
+                        }
+                        else
+                        {
+                            var adId = Session["AdminId"] as string;
+                            bl.MaQTV = adId;
+                        }
+                        bl.NoiDung = nd;
+                        if (string.IsNullOrEmpty(bl.IDCha))
+                        {
+                            bl.IDCha = null;
+                        }
+                        else
+                        {
+                            bl.IDCha = bl.IDCha;
+                        }
+                        bl.MaBV = bl.MaBV;
+                        Log.Information("User đã bình luận có mã là: {bl.MaBL}", bl.MaBL);
 
-                    db.BinhLuans.Add(bl);
-                    db.SaveChanges();
+                        db.BinhLuans.Add(bl);
+                        db.SaveChanges();
 
                         var maNgVietBai = db.BaiViets.Where(bv => bv.MaBV == bl.MaBV).Select(bv => bv.MaTV).FirstOrDefault();
                         if (maNgVietBai != null)
@@ -813,11 +814,8 @@ namespace DienDanThaoLuan.Controllers
             return View();
         }
         [HttpPost]
-<<<<<<< HEAD
         [ValidateAntiForgeryToken]
-=======
         [ValidateInput(false)]
->>>>>>> fe576c4812e9d6f3222165e8d732891edade670d
         public ActionResult GopY(GopY gopY)
         {
             var userId = Session["UserId"] as string;

@@ -7,13 +7,8 @@ using System.Web;
 using System.Web.Mvc;
 using PagedList;
 using DienDanThaoLuan.Attributes;
-<<<<<<< HEAD
 using DienDanThaoLuan.Filters;
 using Ganss.Xss;
-=======
-using Ganss.XSS;
->>>>>>> fe576c4812e9d6f3222165e8d732891edade670d
-
 namespace DienDanThaoLuan.Areas.Admin.Controllers
 {
     [SessionTimeout]
@@ -83,17 +78,6 @@ namespace DienDanThaoLuan.Areas.Admin.Controllers
                 TempData["ThongBao"] = "Không tìm thấy tài khoản này";
             }
             return RedirectToAction("QLThanhVien");
-        }
-        public static string XuLyNoiDung(string input)
-        {
-            if (string.IsNullOrWhiteSpace(input))
-                return input;
-
-            var sanitizer = new HtmlSanitizer();
-            sanitizer.AllowedTags.Clear(); // Không cho phép bất kỳ thẻ HTML nào
-            sanitizer.AllowedAttributes.Clear();
-
-            return sanitizer.Sanitize(input);
         }
     }
 }
